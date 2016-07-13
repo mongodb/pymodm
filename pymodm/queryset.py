@@ -20,13 +20,17 @@ from pymodm.common import (
 
 
 class QuerySet(object):
+    """The default QuerySet type.
+
+    QuerySets handle queries and allow working with documents in bulk.
+    """
 
     def __init__(self, model=None, query=None):
-        """Create a new QuerySet instance.
-
+        """
         :parameters:
-          - `model` The MongoModel class to be produced by the QuerySet.
-          - `query` The MongoDB query that filters the QuerySet.
+          - `model`: The :class:`~pymodm.MongoModel` class to be produced
+            by the QuerySet.
+          - `query`: The MongoDB query that filters the QuerySet.
         """
         self._model = model
         self._query = query or {}
@@ -67,6 +71,31 @@ class QuerySet(object):
 
         Raises `DoesNotExist` if no object was found.
         Raises `MultipleObjectsReturned` if multiple objects were found.
+
+        Note that these exception types are specific to the model class itself,
+        so that it's possible to differentiate exceptions on the model type::
+
+            try:
+                user = User.objects.get({'_id': user_id})
+                profile = UserProfile.objects.get({'user': user.email})
+            except User.DoesNotExist:
+                # Handle User not existing.
+                return redirect_to_registration(user_id)
+            except UserProfile.DoesNotExist:
+                # User has not set up their profile.
+                return setup_user_profile(user_id)
+
+        These model-specific exceptions all inherit from exceptions of the same
+        name defined in the :mod:`~pymodm.errors` module, so you can catch them
+        all::
+
+            try:
+                user = User.objects.get({'_id': user_id})
+                profile = UserProfile.objects.get({'user': user.email})
+            except errors.DoesNotExist:
+                # Either the User or UserProfile does not exist.
+                return redirect_to_404(user_id)
+
         """
         results = iter(self.raw(raw_query))
         try:
@@ -102,13 +131,30 @@ class QuerySet(object):
         return self._clone()
 
     def select_related(self, *fields):
-        """Allow this QuerySet to pre-fetch objects related to the Model."""
+        """Allow this QuerySet to pre-fetch objects related to the Model.
+
+        :parameters:
+          - `fields`: Names of related fields on this model that should be
+            fetched.
+
+        """
         clone = self._clone()
         clone._select_related_fields = set(fields)
         return clone
 
     def raw(self, raw_query):
-        """Filter using a raw MongoDB query."""
+        """Filter using a raw MongoDB query.
+
+        :parameters:
+          - `raw_query`: A raw MongoDB query.
+
+        example::
+
+            >>> list(Vacation.objects.raw({"travel_method": "CAR"}))
+            [Vacatation(destination='NAPA', travel_method='CAR'),
+             Vacatation(destination='GRAND CANYON', travel_method='CAR')]
+
+        """
         query = self._query
         if query:
             return self._clone(
@@ -119,9 +165,9 @@ class QuerySet(object):
         """Set an ordering for this QuerySet.
 
         :parameters:
-          - `ordering` The sort criteria. This should be a list of 2-tuples
+          - `ordering`: The sort criteria. This should be a list of 2-tuples
             consisting of [(field_name, direction)], where "direction" can
-            be one of `pymongo.ASCENDING` or `pymongo.DESCENDING`.
+            be one of :data:`~pymongo.ASCENDING` or :data:`~pymongo.DESCENDING`.
         """
         clone = self._clone()
         clone._order_by = ordering
@@ -131,6 +177,18 @@ class QuerySet(object):
         """Include only specified fields in QuerySet results.
 
         This method is chainable and performs a union of the given fields.
+
+        :parameters:
+          - `fields`: MongoDB names of fields to be included.
+
+        example::
+
+            >>> list(Vacation.objects.all())
+            [Vacation(destination='HAWAII', travel_method='BOAT'),
+             Vacation(destination='NAPA', travel_method='CAR')]
+            >>> list(Vacation.objects.only('travel_method'))
+            [Vacatation(travel_method='BOAT'), Vacation(travel_method='CAR')]
+
         """
         clone = self._clone()
         clone._projection = clone._projection or {}
@@ -139,7 +197,20 @@ class QuerySet(object):
         return clone
 
     def exclude(self, *fields):
-        """Exclude specified fields in QuerySet results."""
+        """Exclude specified fields in QuerySet results.
+
+        :parameters:
+          - `fields`: MongoDB names of fields to be excluded.
+
+        example::
+
+            >>> list(Vacation.objects.all())
+            [Vacation(destination='HAWAII', travel_method='BOAT'),
+             Vacation(destination='NAPA', travel_method='CAR')]
+            >>> list(Vacation.objects.exclude('travel_method'))
+            [Vacatation(destination='HAWAII'), Vacation(destination='NAPA')]
+
+        """
         clone = self._clone()
         clone._projection = clone._projection or {}
         for field in fields:
@@ -149,13 +220,22 @@ class QuerySet(object):
         return clone
 
     def limit(self, limit):
-        """Limit the number of objects in this QuerySet."""
+        """Limit the number of objects in this QuerySet.
+
+        :parameters:
+          - `limit`: The maximum number of documents to return.
+
+        """
         clone = self._clone()
         clone._limit = limit
         return clone
 
     def skip(self, skip):
         """Skip over the first number of objects in this QuerySet.
+
+        :parameters:
+          - `skip`: The number of documents to skip.
+
         """
         clone = self._clone()
         clone._skip = skip
@@ -172,21 +252,54 @@ class QuerySet(object):
     #
 
     def create(self, **kwargs):
-        """Save an instance of this QuerySet's Model."""
+        """Save an instance of this QuerySet's Model.
+
+        :parameters:
+          - `kwargs`: Keyword arguments specifying the field values for the
+            :class:`~pymodm.MongoModel` instance to be created.
+
+        :returns: The :class:`~pymodm.MongoModel` instance, after it has been
+                  saved.
+
+        example::
+
+            >>> vacation = Vacation.objects.create(
+            ...     destination="ROME",
+            ...     travel_method="PLANE")
+            >>> print(vacation)
+            Vacation(destination='ROME', travel_method='PLANE')
+            >>> print(vacation.pk)
+            ObjectId('578925ed6e32ab1d6a8dc717')
+
+        """
         return self._model(**kwargs).save()
 
     def bulk_create(self, object_or_objects, retrieve=False, full_clean=False):
         """Save Model instances in bulk.
 
         :parameters:
-          - `object_or_objects` - A list of MongoModel instances or a single
+          - `object_or_objects`: A list of MongoModel instances or a single
             instance.
-          - `retrieve` (optional) - Whether to return the saved MongoModel
+          - `retrieve`: Whether to return the saved MongoModel
             instances. If ``False`` (the default), only the ids will be
             returned.
-          - `full_clean` (optional) - Whether to validate each object by calling
+          - `full_clean`: Whether to validate each object by calling
             the :meth:`~pymodm.MongoModel.full_clean` method before saving.
             This isn't done by default.
+
+        :returns: A list of ids for the documents saved, or of the
+                  :class:`~pymodm.MongoModel` instances themselves if `retrieve`
+                  is ``True``.
+
+        example::
+
+            >>> vacation_ids = Vacation.objects.bulk_create([
+            ...     Vacation(destination='TOKYO', travel_method='PLANE'),
+            ...     Vacation(destination='ALGIERS', travel_method='PLANE')])
+            >>> print(vacation_ids)
+            [ObjectId('578926716e32ab1d6a8dc718'),
+             ObjectId('578926716e32ab1d6a8dc719')]
+
         """
         retrieve = validate_boolean('retrieve', retrieve)
         full_clean = validate_boolean('full_clean', full_clean)
@@ -205,7 +318,11 @@ class QuerySet(object):
         return ids
 
     def delete(self):
-        """Delete objects in this QuerySet and return the number deleted."""
+        """Delete objects matched by this QuerySet.
+
+        :returns: The number of documents deleted.
+
+        """
         ReferenceField = _import('pymodm.fields.ReferenceField')
         if self._model._mongometa.delete_rules:
             # Don't apply any delete rules if no documents match.
@@ -255,7 +372,14 @@ class QuerySet(object):
         return self._collection.delete_many(self._query).deleted_count
 
     def update(self, update):
-        """Update the objects in this QuerySet and return the number updated."""
+        """Update the objects in this QuerySet and return the number updated.
+
+        example::
+
+            Subscription.objects.raw({"year": 1995}).update(
+                {"$set": {"expired": True}})
+
+        """
         return self._collection.update_many(
             self.raw_query, update).modified_count
 
@@ -265,6 +389,7 @@ class QuerySet(object):
 
     @property
     def raw_query(self):
+        """The raw query that will be executed by this QuerySet."""
         if self._types_query and self._query:
             return {'$and': [self._query, self._types_query]}
         return self._query or self._types_query
@@ -280,11 +405,11 @@ class QuerySet(object):
     def __iter__(self):
         if self._return_raw:
             return self._get_raw_cursor()
-        to_instance = self._model.from_dict
+        to_instance = self._model.from_document
         if self._select_related_fields is not None:
             dereference = _import('pymodm.dereference.dereference')
             to_instance = lambda doc: dereference(
-                self._model.from_dict(doc), self._select_related_fields)
+                self._model.from_document(doc), self._select_related_fields)
         return (to_instance(doc) for doc in self._get_raw_cursor())
 
     def __next__(self):

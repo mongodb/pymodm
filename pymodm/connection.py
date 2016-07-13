@@ -40,13 +40,13 @@ def connect(mongodb_uri, alias=DEFAULT_CONNECTION_ALIAS):
       - `mongodb_uri`: A MongoDB connection string. Any options may be passed
         within the string that are supported by PyMongo. `mongodb_uri` must
         specify a database, which will be used by any
-        :class:`~pymodm.models.MongoModel` that uses this connection.
+        :class:`~pymodm.MongoModel` that uses this connection.
       - `alias`: An optional name for this connection, backed by a
         :class:`~pymongo.mongo_client.MongoClient` instance that is cached under
         this name. You can specify what connection a MongoModel uses by
         specifying the connection's alias via the `connection_alias` attribute
         inside their `Meta` class.  Switching connections is also possible using
-        the :meth:`~pymodm.context_managers.switch_connection` context
+        the :class:`~pymodm.context_managers.switch_connection` context
         manager.  Note that calling `connect()` multiple times with the same
         alias will replace any previous connections.
 

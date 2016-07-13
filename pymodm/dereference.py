@@ -22,7 +22,7 @@ from pymodm.context_managers import no_auto_dereference
 from pymodm.fields import ReferenceField
 
 
-class ObjectMap(dict):
+class _ObjectMap(dict):
     def __init__(self):
         self.hashed = {}
         self.nohash = []
@@ -91,7 +91,7 @@ def _find_references(model_instance, reference_map, fields=None):
 
 
 def _resolve_references(database, reference_map):
-    document_map = ObjectMap()
+    document_map = _ObjectMap()
     for collection_name in reference_map:
         collection = database[collection_name]
         query = {'_id': {'$in': reference_map[collection_name]}}
@@ -161,8 +161,8 @@ def dereference(model_instance, fields=None):
     efficient than dereferencing one field at a time.
 
     :parameters:
-      - `model_instance` The MongoModel instance.
-      - `fields` (optional) An iterable of field names in "dot" notation that
+      - `model_instance`: The MongoModel instance.
+      - `fields`: An iterable of field names in "dot" notation that
         should be dereferenced. If left blank, all fields will be dereferenced.
     """
     # Map of collection name --> list of ids to retrieve from the collection.
@@ -191,8 +191,8 @@ def dereference_id(model_class, model_id):
     """Dereference a single object by id.
 
     :parameters:
-      - `model_class` - The class of a model to be dereferenced.
-      - `model_id` - The id of the model to be dereferenced.
+      - `model_class`: The class of a model to be dereferenced.
+      - `model_id`: The id of the model to be dereferenced.
     """
     collection = model_class._mongometa.collection
-    return model_class.from_dict(collection.find_one(model_id))
+    return model_class.from_document(collection.find_one(model_id))

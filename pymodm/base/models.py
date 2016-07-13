@@ -153,15 +153,6 @@ class MongoModelBase(object):
     """Base class for MongoModel and EmbeddedMongoModel."""
 
     def __init__(self, *args, **kwargs):
-        """Create a new instance of this Model.
-
-        You may use either ordered arguments or keyword arugments, but not both.
-        Ordered arguments will be assigned to fields in the order they were
-        defined.
-
-        Note that creating a new Model instance does not save it to the
-        database.
-        """
         # Initialize dict for saving field values.
         self._data = {}
 
@@ -232,13 +223,17 @@ class MongoModelBase(object):
                 setattr(self, field_names[field], dict[field])
 
     @classmethod
-    def from_dict(cls, dct):
-        """Construct an instance of this class from the given dict.
+    def from_document(cls, document):
+        """Construct an instance of this class from the given document.
 
         :parameters:
-          - `dct` A dict containing instance attributes.
+          - `document`: A Python dictionary describing a MongoDB document.
+            Keys within the document must be named according to each model
+            field's `mongo_name` attribute, rather than the field's Python
+            name.
+
         """
-        dct = validate_mapping('dct', dct)
+        dct = validate_mapping('document', document)
         cls_name = dct.get('_cls')
         if cls_name is not None:
             cls = get_document(cls_name)
@@ -248,7 +243,11 @@ class MongoModelBase(object):
         return inst
 
     def to_son(self):
-        """Get this Model back as a SON object."""
+        """Get this Model back as a :class:`~bson.son.SON` object.
+
+        :returns: SON representing this object as a MongoDB document.
+
+        """
         son = SON()
         for field in self._mongometa.get_fields():
             if field.is_undefined(self):
@@ -265,18 +264,40 @@ class MongoModelBase(object):
         return son
 
     def clean(self):
-        """Hook for custom validation rules run when
-        :method:`~pymodm.base.models.MongoModelBase.full_clean` is called.
+        """Run custom validation rules run when
+        :meth:`~pymodm.MongoModel.full_clean` is called.
+
+        This is an abstract method that can be overridden to validate the
+        :class:`~pymodm.MongoModel` instance as a whole. Custom field validation
+        is better done by passing a validator to the `validators` parameter in a
+        field's constructor.
+
+        example::
+
+            class Vacation(MongoModel):
+                destination = fields.CharField(choices=('HAWAII', 'DETROIT'))
+                travel_method = fields.CharField(
+                    choices=('PLANE', 'CAR', 'BOAT'))
+
+                def clean(self):
+                    # Custom validation that requires looking at several fields.
+                    if (self.destination == 'HAWAII' and
+                            self.travel_method == 'CAR'):
+                        raise ValidationError('Cannot travel to Hawaii by car.')
+
         """
         pass
 
     def clean_fields(self, exclude=None):
-        """
-        Cleans all fields and raises a ValidationError containing a dict
-        of all validation errors if any occur.
+        """Validate the values of all fields.
+
+        This method will raise a :exc:`~pymodm.errors.ValidationError` that
+        describes all issues with each field, if any field fails to pass
+        validation.
 
         :parameters:
-        - `exclude` - list of fields to exclude from validation
+          - `exclude`: A list of fields to exclude from validation.
+
         """
         exclude = validate_list_tuple_or_none('exclude', exclude)
         exclude = set(exclude) if exclude else set()
@@ -298,14 +319,15 @@ class MongoModelBase(object):
             raise ValidationError(error_dict)
 
     def full_clean(self, exclude=None):
-        """Validate this Model.
+        """Validate this :class:`~pymodm.MongoModel`.
 
-        Calling this method will first validate all this Model's Fields and then
-        call :method:`~pymodm.base.models.MongoModelBase.clean`, which can
-        be overridden to provide custom validation on the entire model.
+        This method calls :meth:`~pymodm.MongoModel.clean_fields` to validate
+        the values of all fields then :meth:`~pymodm.MongoModel.clean` to
+        apply any custom validation rules to the model as a whole.
 
         :parameters:
-        - `exclude` - list of fields to exclude from validation.
+          - `exclude`: A list of fields to exclude from validation.
+
         """
         self.clean_fields(exclude=exclude)
         self.clean()
@@ -327,12 +349,76 @@ class MongoModelBase(object):
 
 
 class MongoModel(with_metaclass(TopLevelMongoModelMetaclass, MongoModelBase)):
+    """Base class for all top-level models.
+
+    A MongoModel definition typically includes a number of field instances
+    and possibly a ``Meta`` class attribute that provides metadata or settings
+    specific to the model.
+
+    MongoModels can be instantiated either with positional or keyword arguments.
+    Positional arguments are bound to the fields in the order the fields are
+    defined on the model. Keyword argument names are the same as the names of
+    the fields::
+
+        from pymongo.read_preferences import ReadPreference
+
+        class User(MongoModel):
+            email = fields.EmailField(primary_key=True)
+            name = fields.CharField()
+
+            class Meta:
+                # Read from secondaries.
+                read_preference = ReadPreference.SECONDARY
+
+        # Instantiate User using positional arguments:
+        jane = User('jane@janesemailaddress.net', 'Jane')
+        # Keyword arguments:
+        roy = User(name='Roy', email='roy@roysemailaddress.net')
+
+    .. _metadata-attributes:
+
+    The following metadata attributes are available:
+
+      - `connection_alias`: The alias of the connection to use for the moel.
+      - `collection_name`: The name of the collection to use. By default, this
+        is the same name as the model, converted to snake case.
+      - `codec_options`: An instance of
+        :class:`~bson.codec_options.CodecOptions` to use for reading and writing
+        documents of this model type.
+      - `final`: Whether to support inheritance on this model. ``True`` by
+        default.
+      - `cascade`: If ``True``, save all :class:`~pymodm.MongoModel` instances
+        this object references when :meth:`~pymodm.MongoModel.save` is called
+        on this object.
+      - `read_preference`: The :class:`~pymongo.read_preferences.ReadPreference`
+        to use when reading documents.
+      - `read_concern`: The :class:`~pymongo.read_concern.ReadConcern` to use
+        when reading documents.
+      - `write_concern`: The :class:`~pymongo.write_concern.WriteConcern` to use
+        for write operations.
+
+    .. note:: Creating an instance of MongoModel does not create a document in
+              the database.
+
+    """
+
     @classmethod
     def register_delete_rule(cls, related_model, related_field, rule):
+        """Specify what to do when an instance of this class is deleted.
+
+        :parameters:
+          - `related_model`: The class that references this class.
+          - `related_field`: The name of the field in ``related_model`` that
+            references this class.
+          - `rule`: The delete rule. See
+            :class:`~pymodm.fields.ReferenceField` for details.
+
+        """
         cls._mongometa.delete_rules[(related_model, related_field)] = rule
 
     @property
     def pk(self):
+        """An alias for the primary key (called `_id` in MongoDB)."""
         if self._mongometa.pk is not None:
             return getattr(self, self._mongometa.pk.attname)
 
@@ -361,13 +447,18 @@ class MongoModel(with_metaclass(TopLevelMongoModelMetaclass, MongoModelBase)):
         will be replaced with this version (upserting if necessary).
 
         :parameters:
-          - `cascade` - If ``True``, all dereferenced MongoModels contained in
+          - `cascade`: If ``True``, all dereferenced MongoModels contained in
             this Model instance will also be saved.
-          - `full_clean` - If ``True``, the
-            :method:`~pymodm.base.models.MongoModelBase.full_clean` method
+          - `full_clean`: If ``True``, the
+            :meth:`~pymodm.MongoModel.full_clean` method
             will be called before persisting this object.
-          - `force_insert` - If ``True``, always do an insert instead of a
-            replace.
+          - `force_insert`: If ``True``, always do an insert instead of a
+            replace. In this case, `save` will raise
+            :class:`~pymongo.errors.DuplicateKeyError` if a document already
+            exists with the same primary key.
+
+        :returns: This object, with the `pk` property filled in if it wasn't
+                  already.
 
         """
         cascade = validate_boolean_or_none('cascade', cascade)
@@ -397,8 +488,9 @@ class MongoModel(with_metaclass(TopLevelMongoModelMetaclass, MongoModelBase)):
         """Return ``True`` if the data in this Model is valid.
 
         This method runs the
-        :method:`~pymodm.base.models.MongoModelBase.full_clean`
+        :meth:`~pymodm.MongoModel.full_clean`
         method and returns ``True`` if no ValidationError was raised.
+
         """
         try:
             self.full_clean()
@@ -407,15 +499,16 @@ class MongoModel(with_metaclass(TopLevelMongoModelMetaclass, MongoModelBase)):
         return True
 
     def refresh_from_db(self, fields=None):
-        """Reload this object from the database.
-
-        .. warning:: This method will reload the object from the database,
-        with possibly only a few fields set. Calling
-        :method:`~pymodm.base.models.MongoModel.save` after this may revert
-        or unset fields.
+        """Reload this object from the database, overwriting local field values.
 
         :parameters:
-          - `fields` An iterable of fields to reload. Defaults to all fields.
+          - `fields`: An iterable of fields to reload. Defaults to all fields.
+
+        .. warning:: This method will reload the object from the database,
+           possibly with only a subset of fields. Calling
+           :meth:`~pymodm.MongoModel.save` after this may revert or unset
+           fields in the database.
+
         """
         fields = validate_list_tuple_or_none('fields', fields)
         if self._qs is None:
@@ -438,4 +531,5 @@ class MongoModel(with_metaclass(TopLevelMongoModelMetaclass, MongoModelBase)):
 
 
 class EmbeddedMongoModel(with_metaclass(MongoModelMetaclass, MongoModelBase)):
+    """Base class for models that represent embedded documents."""
     pass

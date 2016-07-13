@@ -32,21 +32,21 @@ class MongoBaseField(object):
         """Create a new Field instance.
 
         :parameters:
-          - `verbose_name` A human-readable name for the Field.
-          - `mongo_name` The name of this field when stored in MongoDB.
-          - `primary_key` If ``True``, this Field will be used for the ``_id``
+          - `verbose_name`: A human-readable name for the Field.
+          - `mongo_name`: The name of this field when stored in MongoDB.
+          - `primary_key`: If ``True``, this Field will be used for the ``_id``
             field when stored in MongoDB. Note that the `mongo_name` of the
             primary key field cannot be changed from ``_id``.
-          - `unique` If ``True``, ensure that there is an index that enforces
+          - `unique`: If ``True``, ensure that there is an index that enforces
             uniqueness on this Field's value.
-          - `blank` If ``True``, allow this field to have an empty value.
-          - `required` If ``True``, do not allow this field to be unspecified.
-          - `default` The default value to use for this field if no other value
+          - `blank`: If ``True``, allow this field to have an empty value.
+          - `required`: If ``True``, do not allow this field to be unspecified.
+          - `default`: The default value to use for this field if no other value
             has been given.
-          - `choices` A list of possible values for the field. This can be a
+          - `choices`: A list of possible values for the field. This can be a
             flat list, or a list of 2-tuples consisting of an allowed field
             value and a human-readable version of that value.
-          - `validators` A list of callables used to validate this Field's
+          - `validators`: A list of callables used to validate this Field's
             value.
         """
         self._verbose_name = validate_string_or_none(

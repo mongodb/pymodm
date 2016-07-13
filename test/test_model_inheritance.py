@@ -69,7 +69,7 @@ class ModelInheritanceTest(ODMTestCase):
         self.assertEqual(
             'bulbasaur', MultipleInheritanceModel._mongometa.collection_name)
         self.assertEqual(
-            MultipleInheritanceModel.from_dict(DB.bulbasaur.find_one()),
+            MultipleInheritanceModel.from_document(DB.bulbasaur.find_one()),
             result)
 
     def test_inheritance_collocation(self):
