@@ -38,7 +38,7 @@ class FinalModel(MongoModel):
 class ModelInheritanceTest(ODMTestCase):
 
     def test_simple_inheritance(self):
-        child = User(name='Gary', phone=1234567)
+        child = User(fname='Gary', phone=1234567)
         self.assertIsInstance(child, User)
         self.assertIsInstance(child, ParentModel)
         # 'name' is primary key from parent.
@@ -55,7 +55,7 @@ class ModelInheritanceTest(ODMTestCase):
 
     def test_multiple_inheritance(self):
         mim = MultipleInheritanceModel(
-            name='Ash', phone='123', address='24 Pallet Town Ave.')
+            fname='Ash', phone='123', address='24 Pallet Town Ave.')
         self.assertIsInstance(mim, User)
         self.assertIsInstance(mim, AnotherUser)
         self.assertEqualsModel(
@@ -73,8 +73,8 @@ class ModelInheritanceTest(ODMTestCase):
             result)
 
     def test_inheritance_collocation(self):
-        parent = ParentModel('Oak', 9876432).save()
-        user = User('Blane', 3456789, '72 Cinnabar').save()
+        parent = ParentModel('Oak', phone=9876432).save()
+        user = User('Blane', phone=3456789, address='72 Cinnabar').save()
         results = list(ParentModel.objects.order_by([('phone', 1)]))
         self.assertEqual([user, parent], results)
         self.assertEqual([user], list(User.objects.all()))

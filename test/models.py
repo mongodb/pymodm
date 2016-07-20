@@ -16,7 +16,8 @@ from pymodm import MongoModel, fields
 
 
 class ParentModel(MongoModel):
-    name = fields.CharField("Customer first name", primary_key=True)
+    fname = fields.CharField("Customer first name", primary_key=True)
+    lname = fields.CharField()
     phone = fields.IntegerField("Phone #",
                                 min_value=1000000, max_value=9999999)
     foo = 'bar'  # Not counted among fields.

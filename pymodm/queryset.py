@@ -215,7 +215,7 @@ class QuerySet(object):
         clone._projection = clone._projection or {}
         for field in fields:
             # Primary key cannot be excluded.
-            if field != self._model._mongometa.pk.attname:
+            if field not in (self._model._mongometa.pk.attname, '_id'):
                 clone._projection[field] = 0
         return clone
 

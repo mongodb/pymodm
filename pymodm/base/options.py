@@ -16,7 +16,6 @@ from bisect import bisect
 
 from bson.codec_options import CodecOptions
 
-from pymodm.common import snake_case
 from pymodm.connection import _get_db, DEFAULT_CONNECTION_ALIAS
 from pymodm.fields import EmbeddedDocumentField, EmbeddedDocumentListField
 
@@ -110,7 +109,3 @@ class MongoOptions(object):
             for attr in DEFAULT_NAMES:
                 if attr in self.meta.__dict__:
                     setattr(self, attr, getattr(self.meta, attr))
-
-        # Default settings.
-        if self.collection_name is None:
-            self.collection_name = snake_case(cls.__name__)

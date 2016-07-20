@@ -20,7 +20,7 @@ from pymodm.base.options import MongoOptions
 from pymodm.common import (
     register_document, get_document, validate_mapping,
     validate_list_tuple_or_none, validate_boolean_or_none,
-    validate_boolean)
+    validate_boolean, snake_case)
 from pymodm.compat import with_metaclass
 from pymodm.errors import ValidationError, InvalidModel, OperationError
 from pymodm.fields import ObjectIdField
@@ -69,21 +69,40 @@ class MongoModelMetaclass(type):
                     if should_inherit_field(base, field):
                         new_class.add_to_class(field.attname, field)
 
-        # Add class-local copies of Exceptions.
-        new_class.add_to_class('DoesNotExist', errors.DoesNotExist)
-        new_class.add_to_class(
-            'MultipleObjectsReturned', errors.MultipleObjectsReturned)
-
         # Discover and store class hierarchy for later.
         class_name = new_class._mongometa.object_name
         new_class._subclasses = set([class_name])
-        for base in new_class._get_bases(bases):
+        flattened_bases = new_class._get_bases(bases)
+        for base in flattened_bases:
             if base._mongometa.final:
                 raise InvalidModel(
                     'Cannot extend class %s, '
                     'because it has been declared final.'
                     % base._mongometa.object_name)
             base._subclasses.add(class_name)
+
+        # Set the default collection name.
+        if new_class._mongometa.collection_name is None:
+            # If this class extends another custom MongoModel, use the same
+            # collection.
+            if flattened_bases:
+                parent_cls = next(iter(flattened_bases))
+                parent_collection_name = parent_cls._mongometa.collection_name
+                new_class._mongometa.collection_name = parent_collection_name
+            else:
+                new_class._mongometa.collection_name = snake_case(name)
+
+        # Create model-specific Exception types.
+        for exc_type in (errors.DoesNotExist, errors.MultipleObjectsReturned):
+            exc_name = exc_type.__name__
+            parent_types = tuple(
+                getattr(base, exc_name) for base in bases
+                if hasattr(base, exc_name))
+            model_exc = type(
+                exc_name,
+                parent_types or (exc_type,),
+                {'__module__': attrs['__module__']})
+            new_class.add_to_class(exc_name, model_exc)
 
         # Add class to the registry.
         register_document(new_class)

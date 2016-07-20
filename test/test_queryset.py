@@ -20,29 +20,35 @@ from pymodm.compat import text_type
 from pymodm.context_managers import no_auto_dereference
 
 from test import ODMTestCase
-
-
-class User(MongoModel):
-    fname = fields.CharField()
-    lname = fields.CharField()
-    creds = fields.IntegerField()
+from test.models import ParentModel, User
 
 
 class QuerySetTestCase(ODMTestCase):
 
     def setUp(self):
-        User(fname='Joe', lname='Biden', creds=0).save()
-        User(fname='Joe', lname='Tomato', creds=1).save()
-        User(fname='Amon', lname='Amarth', creds=2).save()
-        User(fname='Amon', lname='Tomato', creds=3).save()
+        User(fname='Garden', lname='Tomato', phone=1111111).save()
+        User(fname='Rotten', lname='Tomato', phone=2222222).save()
+        User(fname='Amon', lname='Amarth', phone=3333333).save()
+        User(fname='Garth', lname='Amarth', phone=4444444).save()
+
+    def test_does_not_exist(self):
+        with self.assertRaises(User.DoesNotExist) as ctx:
+            User.objects.get({'fname': 'Tulip'})
+        self.assertIsInstance(ctx.exception, ParentModel.DoesNotExist)
+        self.assertFalse(
+            issubclass(ParentModel.DoesNotExist, User.DoesNotExist))
+
+    def test_multiple_objects_returned(self):
+        with self.assertRaises(User.MultipleObjectsReturned):
+            User.objects.get({'lname': 'Tomato'})
 
     def test_all(self):
         results = list(User.objects.all())
         self.assertEqual(4, len(results))
 
     def test_get(self):
-        user = User.objects.get({'lname': 'Amarth'})
-        self.assertEqual('Amon', user.fname)
+        user = User.objects.get({'_id': 'Amon'})
+        self.assertEqual('Amarth', user.lname)
 
     def test_count(self):
         self.assertEqual(2, User.objects.raw({'lname': 'Tomato'}).count())
@@ -50,32 +56,31 @@ class QuerySetTestCase(ODMTestCase):
         self.assertEqual(1, User.objects.skip(1).limit(1).count())
 
     def test_raw(self):
-        results = User.objects.raw({'fname': 'Joe'}).raw({'lname': 'Tomato'})
-        self.assertEqual(1, len(list(results)))
+        results = User.objects.raw({'lname': 'Tomato'}).raw({'_id': 'Rotten'})
+        self.assertEqual(1, results.count())
 
     def test_order_by(self):
-        results = list(User.objects.order_by([('fname', 1)]))
-        self.assertEqual('Amon', results[0].fname)
-        self.assertEqual('Amon', results[1].fname)
-        self.assertEqual('Joe', results[2].fname)
-        self.assertEqual('Joe', results[3].fname)
+        results = list(User.objects.order_by([('_id', 1)]))
+        self.assertEqual('Amarth', results[0].lname)
+        self.assertEqual('Tomato', results[1].lname)
+        self.assertEqual('Amarth', results[2].lname)
+        self.assertEqual('Tomato', results[3].lname)
 
     def test_only(self):
-        results = User.objects.only('fname').only('creds')
+        results = User.objects.only('phone')
         for result in results:
             self.assertIsNone(result.lname)
-            self.assertIsInstance(result.creds, int)
+            self.assertIsInstance(result.phone, int)
             # Primary key cannot be projected out.
-            self.assertIsInstance(result.pk, ObjectId)
+            self.assertIsNotNone(result.pk)
 
     def test_exclude(self):
-        results = User.objects.exclude('fname').exclude('creds')
+        results = User.objects.exclude('_id').exclude('phone')
         for result in results:
-            self.assertIsNone(result.fname)
-            self.assertIsNone(result.creds)
+            self.assertIsNone(result.phone)
             self.assertIsInstance(result.lname, text_type)
             # Primary key cannot be projected out.
-            self.assertIsInstance(result.pk, ObjectId)
+            self.assertIsNotNone(result.pk)
 
     def test_skip(self):
         results = list(User.objects.skip(1))
@@ -91,9 +96,9 @@ class QuerySetTestCase(ODMTestCase):
             self.assertIsInstance(result, dict)
 
     def test_first(self):
-        qs = User.objects.order_by([('creds', 1)])
+        qs = User.objects.order_by([('phone', 1)])
         result = qs.first()
-        self.assertEqual('Biden', result.lname)
+        self.assertEqual('Tomato', result.lname)
         # Returns the same result the second time called.
         self.assertEqual(result, qs.first())
 
@@ -107,26 +112,19 @@ class QuerySetTestCase(ODMTestCase):
     def test_bulk_create(self):
         results = User.objects.bulk_create(
             User(fname='Louis', lname='Armstrong'))
-        self.assertEqual(1, len(results))
-        self.assertIsInstance(results[0], ObjectId)
+        self.assertEqual(['Louis'], results)
 
         results = User.objects.bulk_create([
             User(fname='Woodrow', lname='Wilson'),
             User(fname='Andrew', lname='Jackson')])
-        self.assertEqual(2, len(results))
+        self.assertEqual(['Woodrow', 'Andrew'], results)
+        franklins = [
+            User(fname='Benjamin', lname='Franklin'),
+            User(fname='Aretha', lname='Franklin')
+        ]
+        results = User.objects.bulk_create(franklins, retrieve=True)
         for result in results:
-            self.assertIsInstance(result, ObjectId)
-
-        results = User.objects.bulk_create(
-            [
-                User(fname='Benjamin', lname='Franklin'),
-                User(fname='Benjamin', lname='Button')
-            ],
-            retrieve=True)
-        self.assertEqual(2, len(results))
-        for result in results:
-            self.assertIsInstance(result, MongoModel)
-            self.assertEqual('Benjamin', result.fname)
+            self.assertIn(result, franklins)
 
     def test_delete(self):
         self.assertEqual(
@@ -139,20 +137,20 @@ class QuerySetTestCase(ODMTestCase):
     def test_update(self):
         self.assertEqual(
             2, User.objects.raw({'lname': 'Tomato'}).update(
-                {'$set': {'fname': 'Banana'}}
+                {'$set': {'phone': 1234567}}
             ))
-        results = list(User.objects.raw({'fname': 'Banana'}))
+        results = list(User.objects.raw({'phone': 1234567}))
         self.assertEqual(2, len(results))
         for result in results:
             self.assertEqual('Tomato', result.lname)
 
     def test_getitem(self):
-        users = User.objects.order_by([('creds', 1)])
-        self.assertEqual(0, users[0].creds)
-        self.assertEqual(3, users[3].creds)
+        users = User.objects.order_by([('phone', 1)])
+        self.assertEqual(1111111, users[0].phone)
+        self.assertEqual(4444444, users[3].phone)
 
     def test_slice(self):
-        users = User.objects.order_by([('creds', 1)])[2:3]
+        users = User.objects.order_by([('phone', 1)])[2:3]
         for user in users:
             self.assertEqual('Amon', user.fname)
             self.assertEqual('Amarth', user.lname)

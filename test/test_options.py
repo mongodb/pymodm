@@ -47,7 +47,7 @@ class MongoOptionsTestCase(ODMTestCase):
     def test_get_fields(self):
         # Fields are returned in order.
         self.assertEqual(
-            ['_id', 'phone', 'address'],
+            ['_id', 'lname', 'phone', 'address'],
             [field.mongo_name for field in User._mongometa.get_fields()])
 
     def test_get_field(self):

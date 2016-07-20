@@ -19,15 +19,15 @@ from test.models import User
 class BasicModelTestCase(ODMTestCase):
 
     def test_instantiation(self):
-        msg = 'Got 4 arguments for only 3 fields'
+        msg = 'Got 5 arguments for only 4 fields'
         with self.assertRaisesRegex(ValueError, msg):
-            User('Gary', 1234567, '12 Apple Street', 42)
+            User('Gary', 1234567, '12 Apple Street', 42, 'cucumber')
         msg = 'Unrecognized field name'
         with self.assertRaisesRegex(ValueError, msg):
             User(last_name='Gygax')
         msg = 'name specified more than once in constructor for User'
         with self.assertRaisesRegex(ValueError, msg):
-            User('Gary', name='Gygax')
+            User('Gary', fname='Gygax')
 
     def test_save(self):
         User('Gary').save()
