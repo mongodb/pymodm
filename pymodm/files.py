@@ -20,6 +20,7 @@ try:
 except ImportError:
     Image = None
 
+from pymodm.compat import PY3
 from pymodm.errors import ValidationError, ConfigurationError
 
 from gridfs.errors import NoFile
@@ -28,8 +29,17 @@ from gridfs.grid_file import GridIn, DEFAULT_CHUNK_SIZE
 
 class Storage(object):
     """Abstract class that defines the API for managing files."""
-    def open(self, name):
-        """Return the :class:`~pymodm.files.FieldFile` with the given name."""
+    def open(self, name, mode='rb'):
+        """Open a file.
+
+        :parameters:
+          - `name`: The name of the file.
+          - `mode`: The file mode. Defaults to ``rb``. Not all Storage
+            implementations may support different modes.
+
+        :returns: The :class:`~pymodm.files.FieldFile` with the given `name`.
+
+        """
         raise NotImplementedError
 
     def save(name, content, metadata=None):
@@ -65,8 +75,14 @@ class GridFSStorage(Storage):
     def __init__(self, gridfs_bucket):
         self.gridfs = gridfs_bucket
 
-    def open(self, name):
-        """Return the :class:`~pymodm.files.GridFSFile` with the given name."""
+    def open(self, name, mode='rb'):
+        """Return the :class:`~pymodm.files.GridFSFile` with the given name.
+
+        .. note:: Files from GridFS can only be opened in ``rb`` mode.
+
+        """
+        if mode != 'rb':
+            raise ValueError('GridFS files must be opened in "rb" mode.')
         return GridFSFile(name, self.gridfs)
 
     def save(self, name, content, metadata=None):
@@ -80,14 +96,18 @@ class GridFSStorage(Storage):
         :returns: The id of the saved file.
 
         """
-        gridin_opts = {'filename': name}
+        gridin_opts = {'filename': name, 'encoding': 'utf8'}
         if metadata is not None:
             gridin_opts['metadata'] = metadata
         gridin = GridIn(self.gridfs._collection, **gridin_opts)
-        if not hasattr(content, 'chunks'):
-            content = File(content)
-        for chunk in content.chunks():
-            gridin.write(chunk)
+
+        if PY3 and hasattr(content, 'mode') and 'b' not in content.mode:
+            # File opened in text mode.
+            gridin.writelines(content)
+        else:
+            # File in binary mode, bytes, or text.
+            gridin.write(content)
+
         # Finish writing the file.
         gridin.close()
         return gridin._id
@@ -117,6 +137,9 @@ class _FileProxyMixin(object):
             raise AttributeError(
                 '%s object has no attribute "%s".' % (
                     self.__class__.__name__, attr))
+
+    def __iter__(self):
+        return iter(self.file)
 
 
 class File(_FileProxyMixin):
@@ -192,8 +215,7 @@ class FieldFile(_FileProxyMixin):
 
         """
         if self._file is None:
-            self._file = self.storage.open(self.name)
-            self._committed = True
+            self.open()
         return self._file
 
     @file.setter
@@ -224,11 +246,14 @@ class FieldFile(_FileProxyMixin):
 
     def open(self, mode='rb'):
         """Open this file with the specified `mode`."""
-        self.file.open(mode)
+        self.close()
+        self._file = self.storage.open(self.name, mode)
+        self._committed = True
 
     def close(self):
         """Close this file."""
-        self.file.close()
+        if self._file is not None:
+            self._file.close()
 
     def __eq__(self, other):
         if isinstance(other, File):

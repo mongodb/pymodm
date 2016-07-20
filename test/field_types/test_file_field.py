@@ -32,17 +32,26 @@ class LocalFileSystemStorage(Storage):
         _, name = os.path.split(name)
         return os.path.join(self.upload_to, name)
 
-    def open(self, name):
-        return File(open(self._path(name), 'rb'))
+    def open(self, name, mode='rb'):
+        return File(open(self._path(name), mode))
 
     def save(self, name, content):
         name = self._path(name)
+        # Create directories up to given filename.
         if not os.path.exists(self.upload_to):
             os.makedirs(self.upload_to)
-        # Create directories up to given filename.
-        with open(name, 'wb') as dest:
+        dest = None
+        try:
             for chunk in content.chunks():
+                if dest is None:
+                    mode = 'wb' if isinstance(chunk, bytes) else 'wt'
+                    dest = open(name, mode)
                 dest.write(chunk)
+            # Create an empty file.
+            if dest is None:
+                dest = open(name, 'wb')
+        finally:
+            dest.close()
         return name
 
     def delete(self, name):
@@ -65,14 +74,14 @@ class FileFieldTestMixin(object):
 
     def test_set_file(self):
         # Create directly with builtin 'open'.
-        with open(self.testfile, 'rb') as this_file:
+        with open(self.testfile) as this_file:
             mwf = self.model(this_file).save()
         mwf.refresh_from_db()
         self.assertIn(b'Hello from testfile!', mwf.upload.read())
 
     def test_set_file_object(self):
         # Create with File object.
-        with open(self.testfile, 'rb') as this_file:
+        with open(self.testfile) as this_file:
             wrapped = File(this_file, metadata=self.file_metadata)
             mwf = self.model(wrapped).save()
         mwf.refresh_from_db()
@@ -84,14 +93,14 @@ class FileFieldTestMixin(object):
     def test_delete_file(self):
         # Create a file to delete.
         open(self.tempfile, 'w').close()
-        with open(self.tempfile, 'rb') as tempfile:
+        with open(self.tempfile) as tempfile:
             mwf = self.model(tempfile).save()
         mwf.upload.delete()
         self.assertIsNone(mwf.upload)
         self.assertIsNone(DB.fs.files.find_one())
 
     def test_seek(self):
-        with open(self.testfile, 'rb') as this_file:
+        with open(self.testfile) as this_file:
             mwf = self.model(this_file).save()
         self.assertEqual(0, mwf.upload.tell())
         with open(self.testfile, 'rb') as compare:
@@ -104,7 +113,7 @@ class FileFieldTestMixin(object):
             self.assertEqual(compare.tell(), mwf.upload.tell())
 
     def test_multiple_references_to_same_file(self):
-        with open(self.testfile, 'rb') as testfile:
+        with open(self.testfile) as testfile:
             mwf = self.model(testfile).save()
         # Try to copy the file from its current location to a new field.
         mwf.secondary_upload = mwf.upload
@@ -115,9 +124,21 @@ class FileFieldTestMixin(object):
     def test_exists(self):
         storage = self.model.upload.storage
         self.assertFalse(storage.exists(self.testfile))
-        with open(self.testfile, 'rb') as this_file:
+        with open(self.testfile) as this_file:
             instance = self.model(this_file).save()
         self.assertTrue(storage.exists(instance.upload.name))
+
+    def test_file_modes(self):
+        text_file = open(self.testfile, 'rt')
+        binary_file = open(self.testfile, 'rb')
+        instance = self.model(text_file, binary_file).save()
+        text_file.close()
+        binary_file.close()
+        upload_content = instance.upload.read()
+        self.assertIsInstance(upload_content, bytes)
+        self.assertEqual(
+            instance.secondary_upload.read(),
+            upload_content)
 
 
 class FileFieldGridFSTestCase(FieldTestCase, FileFieldTestMixin):
