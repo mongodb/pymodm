@@ -23,6 +23,12 @@ from test import ODMTestCase
 from test.models import ParentModel, User
 
 
+class Vacation(MongoModel):
+    destination = fields.CharField()
+    travel_method = fields.CharField()
+    price = fields.FloatField()
+
+
 class QuerySetTestCase(ODMTestCase):
 
     def setUp(self):
@@ -30,6 +36,26 @@ class QuerySetTestCase(ODMTestCase):
         User(fname='Rotten', lname='Tomato', phone=2222222).save()
         User(fname='Amon', lname='Amarth', phone=3333333).save()
         User(fname='Garth', lname='Amarth', phone=4444444).save()
+
+    def test_aggregate(self):
+        Vacation.objects.bulk_create([
+            Vacation(destination='HAWAII', travel_method='PLANE', price=999),
+            Vacation(destination='BIGGEST BALL OF TWINE', travel_method='CAR',
+                     price=0.02),
+            Vacation(destination='GRAND CANYON', travel_method='CAR',
+                     price=123.12),
+            Vacation(destination='GRAND CANYON', travel_method='CAR',
+                     price=25.31)
+        ])
+        results = Vacation.objects.raw({'travel_method': 'CAR'}).aggregate(
+            {'$group': {'_id': 'destination', 'price': {'$min': '$price'}}},
+            {'$sort': {'price': -1}}
+        )
+        last_price = float('inf')
+        for result in results:
+            self.assertGreaterEqual(last_price, result['price'])
+            self.assertNotEqual('HAWAII', result['_id'])
+            last_price = result['price']
 
     def test_does_not_exist(self):
         with self.assertRaises(User.DoesNotExist) as ctx:

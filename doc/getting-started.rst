@@ -465,10 +465,10 @@ Manager method to do some complex aggregation::
 
         def comment_counts(self):
             '''Get a map of title -> # comments for each Post.'''
-            aggregates = self.model._mongometa.collection.aggregate([
+            aggregates = self.model.objects.aggregate(
                 {'$project': {'title': 1, 'comments': {'$size': '$comments'}}},
                 {'$sort': {'comments': -1}}
-            ])
+            )
             return OrderedDict((agg['title'], agg['comments'])
                                for agg in aggregates)
 

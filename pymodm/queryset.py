@@ -122,6 +122,53 @@ class QuerySet(object):
         except StopIteration:
             raise self._model.DoesNotExist()
 
+    def aggregate(self, *pipeline, **kwargs):
+        """Perform a MongoDB aggregation.
+
+        Any query, projection, sort, skip, and limit applied to this QuerySet
+        will become aggregation pipeline stages in that order *before* any
+        additional stages given in `pipeline`.
+
+        :parameters:
+          - `pipeline`: Additional aggregation pipeline stages.
+          - `kwargs`: Keyword arguments to pass down to PyMongo's
+            :meth:`~pymongo.collection.Collection.aggregate` method.
+
+        :returns: A :class:`~pymongo.command_cursor.CommandCursor` over the
+          result set.
+
+        example::
+
+            >>> # Apply a filter before aggregation.
+            >>> qs = Vacation.objects.raw({'travel_method': 'CAR'})
+            >>> # Run aggregation pipeline.
+            >>> cursor = qs.aggregate(
+            ...     {'$group': {'_id': '$destination',
+            ...                 'price': {'$min': '$price'}}},
+            ...     {'$sort': {'price': pymongo.DESCENDING}},
+            ...     allowDiskUse=True)
+            >>> list(cursor)
+            [{'_id': 'GRAND CANYON', 'price': 123.12},
+             {'_id': 'MUIR WOODS', 'price': '25.31'},
+             {'_id': 'BIGGEST BALL OF TWINE', 'price': '0.25'}]
+
+        """
+        before_pipeline = []
+        raw_query = self.raw_query
+        if raw_query:
+            before_pipeline.append({'$match': raw_query})
+        if self._projection:
+            before_pipeline.append({'$project': self._projection})
+        if self._order_by:
+            before_pipeline.append({'$sort': self._order_by})
+        if self._skip:
+            before_pipeline.append({'$skip': self._skip})
+        if self._limit:
+            before_pipeline.append({'$limit': self._limit})
+
+        return self._collection.aggregate(
+            before_pipeline + list(pipeline), **kwargs)
+
     #
     # QuerySet methods returning new QuerySets.
     #
