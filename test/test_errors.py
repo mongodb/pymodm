@@ -20,6 +20,7 @@ class Document(MongoModel):
     region_code = CharField(
         validators=[must_be_all_caps, must_be_three_letters])
     number = IntegerField(min_value=0, max_value=100)
+    title = CharField(required=True)
 
 
 class ErrorTestCase(unittest.TestCase):
@@ -44,3 +45,5 @@ class ErrorTestCase(unittest.TestCase):
         self.assertIsInstance(message['number'], list)
         self.assertIn('12345 is greater than maximum value of 100.',
                       message['number'])
+
+        self.assertEqual(['field is required.'], message['title'])

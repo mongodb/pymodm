@@ -328,12 +328,12 @@ class MongoModelBase(object):
                 field_value = field.value_from_object(self)
                 field_empty = field.is_undefined(self)
                 if field_empty and field.required:
-                    error_dict[field.attname] = ValidationError(
-                        'field is required.')
+                    error_dict[field.attname] = [ValidationError(
+                        'field is required.')]
                 elif not field_empty:
                     field.validate(field_value)
             except Exception as exc:
-                error_dict[field.attname] = ValidationError(exc)
+                error_dict[field.attname] = [ValidationError(exc)]
         if error_dict:
             raise ValidationError(error_dict)
 

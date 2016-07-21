@@ -55,7 +55,14 @@ class ValidationError(Exception):
         elif isinstance(message, Exception):
             return text_type(message)
         elif isinstance(message, list):
-            return [self._get_message(item) for item in message]
+            message_list = []
+            for item in message:
+                extracted = self._get_message(item)
+                if isinstance(extracted, list):
+                    message_list.extend(extracted)
+                else:
+                    message_list.append(extracted)
+            return message_list
         elif isinstance(message, dict):
             return {key: self._get_message(message[key])
                     for key in message}
