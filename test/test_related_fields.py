@@ -55,6 +55,10 @@ class EmbeddedTestCase(ODMTestCase):
         comment.save()
         self.assertEqual(post, Comment.objects.first().post)
 
+    def test_assign_id_to_reference_field(self):
+        # No ValidationError raised.
+        Comment(post=1234).full_clean()
+
     def test_reference_errors(self):
         post = Post(body='This is a post.')
         comment = Comment(body='Love your post!', post=post)

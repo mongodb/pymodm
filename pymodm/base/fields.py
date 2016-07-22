@@ -77,7 +77,10 @@ class MongoBaseField(object):
             raw_value = inst._data.get(self.attname, self.default)
             if self.is_blank(raw_value):
                 return raw_value
-            return self.to_python(raw_value)
+            # Cache pythonized value.
+            python_value = self.to_python(raw_value)
+            self.__set__(inst, python_value)
+            return python_value
         # Access from outside a Model instance.
         return self
 
@@ -93,8 +96,7 @@ class MongoBaseField(object):
 
     def is_undefined(self, inst):
         """Determine if a field is undefined (has not been given any value)."""
-        return (self.value_from_object(inst) is None and
-                self.attname not in inst._data)
+        return self.attname not in inst._data
 
     @property
     def verbose_name(self):

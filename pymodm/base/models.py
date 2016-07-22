@@ -22,6 +22,7 @@ from pymodm.common import (
     validate_list_tuple_or_none, validate_boolean_or_none,
     validate_boolean, snake_case)
 from pymodm.compat import with_metaclass
+from pymodm.context_managers import no_auto_dereference
 from pymodm.errors import ValidationError, InvalidModel, OperationError
 from pymodm.fields import ObjectIdField
 from pymodm.manager import Manager
@@ -268,14 +269,15 @@ class MongoModelBase(object):
 
         """
         son = SON()
-        for field in self._mongometa.get_fields():
-            if field.is_undefined(self):
-                continue
-            raw_value = field.value_from_object(self)
-            if field.is_blank(raw_value):
-                son[field.mongo_name] = raw_value
-            else:
-                son[field.mongo_name] = field.to_mongo(raw_value)
+        with no_auto_dereference(self):
+            for field in self._mongometa.get_fields():
+                if field.is_undefined(self):
+                    continue
+                raw_value = self._data.get(field.attname)
+                if field.is_blank(raw_value):
+                    son[field.mongo_name] = raw_value
+                else:
+                    son[field.mongo_name] = field.to_mongo(raw_value)
         # Add metadata about our type, so that we instantiate the right class
         # when retrieving from MongoDB.
         if not self._mongometa.final:
@@ -348,7 +350,8 @@ class MongoModelBase(object):
           - `exclude`: A list of fields to exclude from validation.
 
         """
-        self.clean_fields(exclude=exclude)
+        with no_auto_dereference(self):
+            self.clean_fields(exclude=exclude)
         self.clean()
 
     def __iter__(self):
