@@ -341,14 +341,13 @@ class FileField(MongoBaseField):
         file_obj = self.to_python(value)
         # Save the file and return its name.
         if not file_obj._committed:
-            file_obj.save(value.name, value)
-        return file_obj.name
+            file_obj.save(value.file_id, value)
+        return file_obj.file_id
 
     def _to_field_file(self, value, inst):
         if isinstance(value, FieldFile):
             # No need to convert anything.
             return value
-
         # Convert builtin 'file' and others to a File object.
         if (not isinstance(value, File) and
                 hasattr(value, 'read') and hasattr(value, 'name')):
@@ -356,7 +355,7 @@ class FileField(MongoBaseField):
 
         # Wrap File objects in a FieldFile.
         if isinstance(value, File):
-            ff = self._wrapper_class(inst, self, value.name)
+            ff = self._wrapper_class(inst, self, value.file_id)
             ff.file = value
             ff._committed = False
             return ff

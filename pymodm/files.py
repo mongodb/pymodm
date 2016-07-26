@@ -29,15 +29,15 @@ from gridfs.grid_file import GridIn, DEFAULT_CHUNK_SIZE
 
 class Storage(object):
     """Abstract class that defines the API for managing files."""
-    def open(self, name, mode='rb'):
+    def open(self, file_id, mode='rb'):
         """Open a file.
 
         :parameters:
-          - `name`: The name of the file.
+          - `file_id`: The id of the file.
           - `mode`: The file mode. Defaults to ``rb``. Not all Storage
             implementations may support different modes.
 
-        :returns: The :class:`~pymodm.files.FieldFile` with the given `name`.
+        :returns: The :class:`~pymodm.files.FieldFile` with the given `file_id`.
 
         """
         raise NotImplementedError
@@ -55,12 +55,12 @@ class Storage(object):
         """
         raise NotImplementedError
 
-    def delete(self, name):
-        """Delete the file with the given `name`."""
+    def delete(self, file_id):
+        """Delete the file with the given `file_id`."""
         raise NotImplementedError
 
-    def exists(self, name):
-        """Returns ``True`` if the file with the given `name` exists."""
+    def exists(self, file_id):
+        """Returns ``True`` if the file with the given `file_id` exists."""
         raise NotImplementedError
 
 
@@ -75,15 +75,23 @@ class GridFSStorage(Storage):
     def __init__(self, gridfs_bucket):
         self.gridfs = gridfs_bucket
 
-    def open(self, name, mode='rb'):
-        """Return the :class:`~pymodm.files.GridFSFile` with the given name.
+    def open(self, file_id, mode='rb'):
+        """Open a file.
+
+        :parameters:
+          - `file_id`: The id of the file.
+          - `mode`: The file mode. Defaults to ``rb``. Not all Storage
+            implementations may support different modes.
+
+        :returns: The :class:`~pymodm.files.GridFSFile` with the given
+        `file_id`.
 
         .. note:: Files from GridFS can only be opened in ``rb`` mode.
 
         """
         if mode != 'rb':
             raise ValueError('GridFS files must be opened in "rb" mode.')
-        return GridFSFile(name, self.gridfs)
+        return GridFSFile(file_id, self.gridfs)
 
     def save(self, name, content, metadata=None):
         """Save `content` in a file named `name`.
@@ -117,17 +125,17 @@ class GridFSStorage(Storage):
         gridin.close()
         return gridin._id
 
-    def delete(self, name):
-        """Delete the file with the given `name`."""
+    def delete(self, file_id):
+        """Delete the file with the given `file_id`."""
         try:
-            self.gridfs.delete(name)
+            self.gridfs.delete(file_id)
         except NoFile:
             pass
 
-    def exists(self, name):
-        """Returns ``True`` if the file with the given `name` exists."""
+    def exists(self, file_id):
+        """Returns ``True`` if the file with the given `file_id` exists."""
         try:
-            self.gridfs.open_download_stream(name)
+            self.gridfs.open_download_stream(file_id)
         except NoFile:
             return False
         return True
@@ -161,7 +169,7 @@ class File(_FileProxyMixin):
     """
     def __init__(self, file, name=None, metadata=None):
         self.file = file
-        self.name = name or file.name
+        self.file_id = name or file.name
         self.metadata = metadata
 
     def open(self, mode='rb'):
@@ -199,15 +207,16 @@ class File(_FileProxyMixin):
 class FieldFile(_FileProxyMixin):
     """Type returned when accessing a :class:`~pymodm.fields.FileField`.
 
-    This type is just a thin wrapper around a :class:`~pymodm.files.File`,
-    can it can be treated as a file-like object in most places where a `file`
-    is expected.
+    This type is just a thin wrapper around a :class:`~pymodm.files.File` and
+    can be treated as a file-like object in most places where a `file` is
+    expected.
+
     """
 
-    def __init__(self, instance, field, name):
+    def __init__(self, instance, field, file_id):
         self.instance = instance
         self.field = field
-        self.name = name
+        self.file_id = file_id
         self.storage = field.storage
         self._file = None
         self._committed = True
@@ -236,23 +245,20 @@ class FieldFile(_FileProxyMixin):
             string, or bytes.
 
         """
-        if self.metadata is not None:
-            self.name = self.storage.save(name, content, self.metadata)
-        else:
-            self.name = self.storage.save(name, content)
-        setattr(self.instance, self.field.attname, self.name)
+        self.file_id = self.storage.save(name, content, self.metadata)
+        setattr(self.instance, self.field.attname, self.file_id)
         self._committed = True
 
     def delete(self):
         """Delete this file."""
-        self.storage.delete(self.name)
+        self.storage.delete(self.file_id)
         delattr(self.instance, self.field.attname)
         self._committed = False
 
     def open(self, mode='rb'):
         """Open this file with the specified `mode`."""
         self.close()
-        self._file = self.storage.open(self.name, mode)
+        self._file = self.storage.open(self.file_id, mode)
         self._committed = True
 
     def close(self):
@@ -262,7 +268,7 @@ class FieldFile(_FileProxyMixin):
 
     def __eq__(self, other):
         if isinstance(other, File):
-            return self.name == other.name
+            return self.file_id == other.file_id
         return NotImplemented
 
     def __ne__(self, other):
@@ -315,8 +321,8 @@ class GridFSFile(File):
         >>> my_object.save()  # Old file is replaced with the new one.
     """
 
-    def __init__(self, name, gridfs_bucket, file=None):
-        super(GridFSFile, self).__init__(file, name, None)
+    def __init__(self, file_id, gridfs_bucket, file=None):
+        super(GridFSFile, self).__init__(file, file_id, None)
         self.gridfs = gridfs_bucket
         self._file = file
 
@@ -329,9 +335,9 @@ class GridFSFile(File):
         """
         if self._file is None:
             try:
-                self.file = self.gridfs.open_download_stream(self.name)
+                self.file = self.gridfs.open_download_stream(self.file_id)
             except NoFile:
-                raise ValidationError('No file with id: %s' % self.name)
+                raise ValidationError('No file with id: %s' % self.file_id)
         return self._file
 
     @file.setter
@@ -342,4 +348,4 @@ class GridFSFile(File):
 
     def delete(self):
         """Delete this file from GridFS."""
-        self.gridfs.delete(self.name)
+        self.gridfs.delete(self.file_id)

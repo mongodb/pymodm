@@ -35,7 +35,7 @@ class LocalFileSystemStorage(Storage):
     def open(self, name, mode='rb'):
         return File(open(self._path(name), mode))
 
-    def save(self, name, content):
+    def save(self, name, content, metadata=None):
         name = self._path(name)
         # Create directories up to given filename.
         if not os.path.exists(self.upload_to):
@@ -77,14 +77,22 @@ class FileFieldTestMixin(object):
         with open(self.testfile) as this_file:
             mwf = self.model(this_file).save()
         mwf.refresh_from_db()
+        self.assertEqual('testfile.txt', os.path.basename(mwf.upload.name))
         self.assertIn(b'Hello from testfile!', mwf.upload.read())
 
     def test_set_file_object(self):
         # Create with File object.
         with open(self.testfile) as this_file:
+            # Set a name explicitly ("uploaded").
+            wrapped_with_name = File(
+                this_file, 'uploaded', metadata=self.file_metadata)
+            # Name set from underlying file.
             wrapped = File(this_file, metadata=self.file_metadata)
-            mwf = self.model(wrapped).save()
+            mwf = self.model(wrapped_with_name, wrapped).save()
         mwf.refresh_from_db()
+        self.assertEqual('uploaded', os.path.basename(mwf.upload.name))
+        self.assertEqual('testfile.txt',
+                         os.path.basename(mwf.secondary_upload.name))
         self.assertIn(b'Hello from testfile!', mwf.upload.read())
         if self.file_metadata is not None:
             self.assertEqual(self.file_metadata['contentType'],
@@ -126,7 +134,7 @@ class FileFieldTestMixin(object):
         self.assertFalse(storage.exists(self.testfile))
         with open(self.testfile) as this_file:
             instance = self.model(this_file).save()
-        self.assertTrue(storage.exists(instance.upload.name))
+        self.assertTrue(storage.exists(instance.upload.file_id))
 
     def test_file_modes(self):
         text_file = open(self.testfile, 'rt')
