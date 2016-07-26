@@ -101,6 +101,11 @@ class GridFSStorage(Storage):
             gridin_opts['metadata'] = metadata
         gridin = GridIn(self.gridfs._collection, **gridin_opts)
 
+        try:
+            content.seek(0)
+        except (AttributeError, UnsupportedOperation):
+            pass
+
         if PY3 and hasattr(content, 'mode') and 'b' not in content.mode:
             # File opened in text mode.
             gridin.writelines(content)
