@@ -29,7 +29,7 @@ class Contributor(MongoModel):
 
 
 class Image(EmbeddedMongoModel):
-    image_url = fields.CharField()
+    image_url = fields.CharField(required=True)
     alt_text = fields.CharField()
     photographer = fields.ReferenceField(Contributor)
 
@@ -44,7 +44,7 @@ class Comment(MongoModel):
     post = fields.ReferenceField(Post)
 
 
-class EmbeddedTestCase(ODMTestCase):
+class RelatedFieldsTestCase(ODMTestCase):
 
     def test_basic_reference(self):
         post = Post(body='This is a post.')
@@ -58,6 +58,22 @@ class EmbeddedTestCase(ODMTestCase):
     def test_assign_id_to_reference_field(self):
         # No ValidationError raised.
         Comment(post=1234).full_clean()
+
+    def test_validate_embedded_document(self):
+        with self.assertRaisesRegex(ValidationError, 'field is required'):
+            # Image has all fields left blank, which isn't allowed.
+            Contributor(name='Mr. Contributor', thumbnail=Image()).save()
+        # Test with a dict.
+        with self.assertRaisesRegex(ValidationError, 'field is required'):
+            Contributor(name='Mr. Contributor', thumbnail={
+                'alt_text': 'a picture of nothing, since there is no image_url.'
+            }).save()
+
+    def test_validate_embedded_document_list(self):
+        with self.assertRaisesRegex(ValidationError, 'field is required'):
+            Post(images=[Image(alt_text='Vast, empty space.')]).save()
+        with self.assertRaisesRegex(ValidationError, 'field is required'):
+            Post(images=[{'alt_text': 'Vast, empty space.'}]).save()
 
     def test_reference_errors(self):
         post = Post(body='This is a post.')
@@ -154,15 +170,20 @@ class EmbeddedTestCase(ODMTestCase):
         self.assertEqual(b, ReferenceA.objects.select_related().first().ref)
 
     def test_cascade_save(self):
-        # Referenced objects do not have to be saved prior to a cascade save.
-        photographer = Contributor('Curly')
+        photographer = Contributor('Curly').save()
         image = Image('kitten.png', 'kitten', photographer)
         post = Post('This is a post.', [image])
-        photographer.thumbnail = Image('curly.png', "It's Curly.")
+        # Photographer has already been saved to the database. Let's change it.
+        photographer_thumbnail = Image('curly.png', "It's Curly.")
+        photographer.thumbnail = photographer_thumbnail
         post.body += "edit: I'm a real author because I have a thumbnail now."
-        # {'body': 'This is a post', 'images': [
-        #     {'image_url': 'stew.png', 'photographer': {
-        #         'name': 'Stew'}}]}
+        # {'body': 'This is a post', 'images': [{
+        #     'image_url': 'stew.png', 'photographer': {
+        #         'name': 'Curly', 'thumbnail': {
+        #             'image_url': 'curly.png', 'alt_text': "It's Curly."}
+        #     }]
+        # }
         post.save(cascade=True)
+        post.refresh_from_db()
         self.assertEqual(
-            photographer.thumbnail, Contributor.objects.first().thumbnail)
+            post.images[0].photographer.thumbnail, photographer_thumbnail)

@@ -1068,7 +1068,7 @@ class EmbeddedDocumentField(RelatedModelFieldsBase):
             if not isinstance(value, self.related_model):
                 raise ValidationError('value must be an instance of %s.'
                                       % (self.related_model.__name__))
-
+            value.full_clean()
         self.validators.append(validate_related_model)
 
     def to_python(self, value):
@@ -1112,7 +1112,8 @@ class EmbeddedDocumentListField(RelatedModelFieldsBase):
                     raise ValidationError(
                         '%r is not an instance of %s.'
                         % (v, self.related_model.__name__))
-                self.validators.append(validate_related_model)
+                v.full_clean()
+        self.validators.append(validate_related_model)
 
     def to_python(self, value):
         return [self.related_model.from_document(item)
