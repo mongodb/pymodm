@@ -1,0 +1,17 @@
+<!-- -*- mode: jinja2 -*- -->
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block body %}
+  {% if error %}
+    <p class="error-paragraph">{{ error }}</p>
+  {% endif %}
+  <form id="login-form" action="/login" method="post">
+    {{ input("email") }}
+    {{ input("password", type="password") }}
+    <input type="submit" value="login" />
+  </form>
+  <p>
+    Don't have an account yet?
+    <a href="/users/new">Sign Up!</a>
+  </p>
+{% endblock %}

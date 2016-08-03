@@ -1,0 +1,33 @@
+span.post-author, span.post-date {
+    font-style: italic;
+}
+
+ul.post-list, ul.comments {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+li.post-item, li.comment {
+    border-left: solid 1px;
+    padding-left: 5px;
+}
+
+div.comment-body {
+    display: block;
+}
+
+li.comment {
+    margin-top: 5px;
+}
+
+div.form-input {
+    display: block;
+}
+
+textarea {
+    display: block;
+}
+
+li.error-item {
+    color: red;
+}

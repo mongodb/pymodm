@@ -2,9 +2,14 @@
 PyMODM
 ======
 
-A generic ODM around PyMongo_, the MongoDB Python driver.
+A generic ODM around PyMongo_, the MongoDB Python driver. Its goal is to provide
+an easy, object-oriented interface to MongoDB documents. PyMODM works on Python
+2.7 as well as Python 3.3 and up. To learn more, you can browse the `official
+documentation`_ take a look at some `examples`_.
 
 .. _PyMongo: https://pypi.python.org/pypi/pymongo
+.. _official documentation: https://pymodm.readthedocs.org
+.. _examples: https://github.com/mongodb/pymodm/examples
 
 Support / Feedback
 ==================
@@ -22,10 +27,10 @@ Think you’ve found a bug? Want to see a new feature in PyMODM? open
 a case in our issue management tool, JIRA:
 
 - `Create an account and login <https://jira.mongodb.org>`_.
-- Navigate to `the PYODM project <https://jira.mongodb.org/browse/PYODM>`_.
+- Navigate to `the PYMODM project <https://jira.mongodb.org/browse/PYMODM>`_.
 - Click **Create Issue** - Please provide as much information as possible about the issue type and how to reproduce it.
 
-Bug reports in JIRA for all driver projects (i.e. PYTHON, CSHARP, JAVA) and the
+Bug reports in JIRA for all driver projects (e.g. PYMODM, PYTHON, JAVA) and the
 Core Server (i.e. SERVER) project are **public**.
 
 How To Ask For Help

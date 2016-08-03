@@ -1,0 +1,33 @@
+<!-- -*- mode: jinja2 -*- -->
+{% extends "base.html" %}
+{% macro render_post(post) -%}
+  <div class="post-container">
+    <h2 class="post-title">
+      <a href="/posts/{{ post.pk }}">{{ post.title }}</a>
+    </h2>
+    Published by <span class="post-author">{{ post.author.handle }}</span>
+    on <span class="post-date">{{ post.date|human_date }}</span>.
+    <p class="post-content">{{ post.summary }}</p>
+  </div>
+{%- endmacro %}
+
+{% block title %}My Sweet Blog{% endblock %}
+{% block body %}
+  {% if 'user' in session %}
+    <p>Logged in as {{ session['user'] }}. <a href="/logout">Log out</a></p>
+  {% else %}
+    <p>You are not <a href="/login">logged in</a>.</p>
+  {% endif %}
+  {% if posts %}
+    <ul class="post-list">
+      {% for post in posts %}
+        <li class="post-item">
+          {{ render_post(post) }}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="no-posts">Nothing to see yet! Come back soon and check for updates.</p>
+  {% endif %}
+  <a href="/posts/new">Create a new post.</a>
+{% endblock %}

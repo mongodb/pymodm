@@ -1,0 +1,20 @@
+<!-- -*- mode: jinja2 -*- -->
+{% extends "base.html" %}
+{% block title %}Create a new Post{% endblock %}
+{% block body %}
+  {% if errors %}
+    <p>There were some problems:</p>
+    {{ list_errors(errors) }}
+  {% endif %}
+  <form id="new-post-form" action="/posts/new" method="post">
+    {{ input("title") }}
+    {{ input("date", label="date YYYY-MM-DD (blank for today, right now)", type="datetime") }}
+
+    <div class="form-input">
+      <label for="content">content</label>
+      <textarea rows="40" cols="80" name="content" form="new-post-form"></textarea>
+    </div>
+
+    <input type="submit" value="save" />
+  </form>
+{% endblock body %}

@@ -1,0 +1,46 @@
+<!-- -*- mode: jinja2 -*- -->
+{% extends "base.html" %}
+{% block title %}{{ post.title }}{% endblock %}
+{% block body %}
+  <p class="post-details">
+    Published by <span class="post-details-author">{{ post.author.handle }}</span>
+    on <span class="post-details-date">{{ post.date|human_date }}</span>.
+  </p>
+  <p class="post-content">
+    {{ post.body }}
+  </p>
+
+  <hr />
+
+  <div class="comments">
+    {% if post.comments %}
+      <h3>Comments</h3>
+      <ul class="comments">
+        {% for comment in post.comments %}
+          <li class="comment">
+            <span class="comment-author">{{ comment.author }}</span> on
+            <span class="comment-date">{{ comment.date|human_date }}</span> said:
+            <div class="comment-body">
+              {{ comment.body }}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="no-comments">No comments yet. Be the first one!</p>
+    {% endif %}
+    <h3>Add a Comment</h3>
+    {% if errors %}
+      <p>There were some problems with your comment:</p>
+      {{ list_errors(errors) }}
+    {% endif %}
+    <form method="POST" id="comment-form" action="/comments/new">
+      {{ input('author', label='email') }}
+      <label for="content">Comment</label>
+      <textarea rows="40" cols="80" name="content" form="comment-form"></textarea>
+      <input type="hidden" name="post_id" value="{{ post.pk }}" />
+      <input type="submit" value="submit comment" />
+    </form>
+  </div>
+  <a href="/">Back to main page</a>.
+{% endblock %}

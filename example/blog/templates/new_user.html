@@ -1,0 +1,19 @@
+<!-- -*- mode: jinja2 -*- -->
+{% extends "base.html" %}
+{% block title %}New User{% endblock %}
+{% block body %}
+  {% if errors %}
+    <p>There were some problems:</p>
+    {{ list_errors(errors) }}
+  {% endif %}
+  <form id="new-user-form" action="/users/new" method="post">
+    {{ input("email") }}
+    {{ input("handle") }}
+    {{ input("password", type="password") }}
+    <input type="submit" value="register" />
+
+    <p>
+      Already signed up? <a href="/login">Log in</a>.
+    </p>
+  </form>
+{% endblock body %}

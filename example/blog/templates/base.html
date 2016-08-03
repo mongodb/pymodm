@@ -1,0 +1,42 @@
+<!-- -*- mode: jinja2 -*- -->
+{% macro input(name, label='', value='', type='text') -%}
+  <div class="form-input">
+    <label for="{{ name }}">{{ label or name }}</label>
+    <input type="{{ type }}" name="{{ name }}" value="{{ value }}" />
+  </div>
+{%- endmacro %}
+
+{% macro list_errors(errors) -%}
+  <ul class="error-list">
+    {% for error in errors %}
+      <li class="error-item"><strong>{{ error }}</strong>:
+        <ul class="error-item-list">
+          {% for error_item in errors[error] %}
+            <li class="error-item-list-item">{{ error_item }}</li>
+          {% endfor %}
+        </ul>
+      </li>
+    {% endfor %}
+  </ul>
+{%- endmacro %}
+
+<!doctype html>
+<html>
+  <head>
+    <title>{% block title %}My Sweet Blog{% endblock title %}</title>
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css" />
+  </head>
+  <body>
+    <h1>{{ self.title() }}</h1>
+    {% with flashed_messages = get_flashed_messages() %}
+      {% if flashed_messages %}
+        <ul class="flashed-messages">
+          {% for message in flashed_messages %}
+            <li class="flashed-message">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    {% block body %}{% endblock %}
+  </body>
+</html>
