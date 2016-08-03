@@ -225,7 +225,9 @@ class DateTimeField(MongoBaseField):
         elif isinstance(value, datetime.date):
             return datetime.datetime(value.year, value.month, value.day)
         elif isinstance(value, string_types):
-            return parse_datetime(value)
+            parsed = parse_datetime(value)
+            if parsed is not None:
+                return parsed
         raise ValidationError(
             '%r cannot be converted to a datetime object.' % value)
 

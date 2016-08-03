@@ -84,15 +84,19 @@ class DateTimeFieldTestCase(FieldTestCase):
 
     def test_validate(self):
         msg = 'cannot be converted to a datetime object'
-        with self.assertRaisesRegex(ValidationError, msg):
+        invalid_values = [
             # Inconvertible type.
-            self.field.validate(22)
-        with self.assertRaisesRegex(ValidationError, msg):
+            22,
             # Microseconds without seconds.
-            self.field.validate('2006-7-2T123.456')
-        with self.assertRaisesRegex(ValidationError, msg):
+            '2006-7-2T123.456',
             # Nonsense timezone.
-            self.field.validate("2006-7-2T01:03:04.123456-03000")
-        with self.assertRaisesRegex(ValidationError, msg):
+            '2006-7-2T01:03:04.123456-03000',
             # Hours only.
-            self.field.validate('2006-7-2T01')
+            '2006-7-2T01',
+            # Wrong format.
+            '12/4/89'
+        ]
+        for invalid in invalid_values:
+            msg = '%r cannot be converted to a datetime object.' % (invalid,)
+            with self.assertRaisesRegex(ValidationError, msg):
+                self.field.validate(invalid)
