@@ -14,11 +14,11 @@ PyMODM
 A generic ODM around PyMongo_, the MongoDB Python driver. Its goal is to provide
 an easy, object-oriented interface to MongoDB documents. PyMODM works on Python
 2.7 as well as Python 3.3 and up. To learn more, you can browse the `official
-documentation`_ take a look at some `examples`_.
+documentation`_ or take a look at some `examples`_.
 
 .. _PyMongo: https://pypi.python.org/pypi/pymongo
 .. _official documentation: https://pymodm.readthedocs.io
-.. _examples: https://github.com/mongodb/pymodm/examples
+.. _examples: https://github.com/mongodb/pymodm/tree/master/example
 
 Support / Feedback
 ==================
