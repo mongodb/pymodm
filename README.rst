@@ -2,6 +2,15 @@
 PyMODM
 ======
 
+
+.. image:: http://jenkins.bci.10gen.cc:8080/job/pymodm/badge/icon
+   :alt: View build status
+   :target: http://jenkins.bci.10gen.cc:8080/job/pymodm
+
+.. image:: https://badges.gitter.im/mongodb/pymodm.svg
+   :alt: Join the chat at https://gitter.im/mongodb/pymodm
+   :target: https://gitter.im/mongodb/pymodm?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
 A generic ODM around PyMongo_, the MongoDB Python driver. Its goal is to provide
 an easy, object-oriented interface to MongoDB documents. PyMODM works on Python
 2.7 as well as Python 3.3 and up. To learn more, you can browse the `official
