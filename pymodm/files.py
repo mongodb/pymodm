@@ -84,7 +84,7 @@ class GridFSStorage(Storage):
             implementations may support different modes.
 
         :returns: The :class:`~pymodm.files.GridFSFile` with the given
-        `file_id`.
+                  `file_id`.
 
         .. note:: Files from GridFS can only be opened in ``rb`` mode.
 

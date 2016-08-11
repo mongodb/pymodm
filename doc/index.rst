@@ -11,9 +11,11 @@ Overview
 
 **PyMODM** is a generic ODM on top of `PyMongo`_, the MongoDB Python
 driver. This documentation attempts to explain everything you need to know to
-use **PyMODM**.
+use **PyMODM**. In addition to this documentation, you can also check out
+`example`_ code as part of the PyMODM project on Github.
 
 .. _PyMongo: https://pypi.python.org/pypi/pymongo
+.. _example: https://github.com/mongodb/pymodm/tree/master/example
 
 Contents:
 

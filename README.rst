@@ -17,7 +17,7 @@ an easy, object-oriented interface to MongoDB documents. PyMODM works on Python
 documentation`_ take a look at some `examples`_.
 
 .. _PyMongo: https://pypi.python.org/pypi/pymongo
-.. _official documentation: https://pymodm.readthedocs.org
+.. _official documentation: https://pymodm.readthedocs.io
 .. _examples: https://github.com/mongodb/pymodm/examples
 
 Support / Feedback
