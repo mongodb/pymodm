@@ -31,6 +31,11 @@ Contents:
    api/index
    getting-started
 
+Changes
+-------
+
+See the :doc:`changelog` for a full list of changes to PyMODM.
+
 Indices and tables
 ==================
 
