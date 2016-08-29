@@ -164,3 +164,10 @@ class DereferenceTestCase(ODMTestCase):
         hand = Hand(cards).save()
         hand.refresh_from_db()
         dereference(hand)
+
+    def test_reference_not_found(self):
+        post = Post().save()
+        comment = Comment(body='this is a comment', post=post).save()
+        post.delete()
+        comment.refresh_from_db()
+        self.assertIsNone(comment.post)
