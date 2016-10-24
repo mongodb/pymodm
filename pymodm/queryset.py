@@ -418,17 +418,23 @@ class QuerySet(object):
 
         return self._collection.delete_many(self._query).deleted_count
 
-    def update(self, update):
+    def update(self, update, **kwargs):
         """Update the objects in this QuerySet and return the number updated.
+
+        :parameters:
+          - `update`: The modifications to apply.
+          - `kwargs`: (optional) keyword arguments to pass down to
+            :meth:`~pymongo.collection.Collection.update_many`.
 
         example::
 
             Subscription.objects.raw({"year": 1995}).update(
-                {"$set": {"expired": True}})
+                {"$set": {"expired": True}},
+                upsert=True)
 
         """
         return self._collection.update_many(
-            self.raw_query, update).modified_count
+            self.raw_query, update, **kwargs).modified_count
 
     #
     # Helper methods

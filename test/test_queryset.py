@@ -170,6 +170,11 @@ class QuerySetTestCase(ODMTestCase):
         for result in results:
             self.assertEqual('Tomato', result.lname)
 
+        User.objects.raw({'phone': 7654321}).update(
+            {'$set': {'lname': 'Ennis'}},
+            upsert=True)
+        User.objects.get({'phone': 7654321})
+
     def test_getitem(self):
         users = User.objects.order_by([('phone', 1)])
         self.assertEqual(1111111, users[0].phone)
