@@ -22,7 +22,8 @@ from pymodm.fields import EmbeddedDocumentField, EmbeddedDocumentListField
 # Attributes that can be user-specified in MongoOptions.
 DEFAULT_NAMES = (
     'connection_alias', 'collection_name', 'codec_options', 'final',
-    'cascade', 'read_preference', 'read_concern', 'write_concern')
+    'cascade', 'read_preference', 'read_concern', 'write_concern',
+    'indexes')
 
 
 class MongoOptions(object):
@@ -46,6 +47,7 @@ class MongoOptions(object):
         self.read_preference = None
         self.read_concern = None
         self.write_concern = None
+        self.indexes = []
         self._auto_dereference = True
 
     @property

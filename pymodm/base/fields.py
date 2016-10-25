@@ -27,8 +27,8 @@ class MongoBaseField(object):
     empty_values = [[], (), {}, None, '', b'', set()]
 
     def __init__(self, verbose_name=None, mongo_name=None, primary_key=False,
-                 unique=False, blank=False, required=False,
-                 default=None, choices=None, validators=None):
+                 blank=False, required=False, default=None, choices=None,
+                 validators=None):
         """Create a new Field instance.
 
         :parameters:
@@ -37,8 +37,6 @@ class MongoBaseField(object):
           - `primary_key`: If ``True``, this Field will be used for the ``_id``
             field when stored in MongoDB. Note that the `mongo_name` of the
             primary key field cannot be changed from ``_id``.
-          - `unique`: If ``True``, ensure that there is an index that enforces
-            uniqueness on this Field's value.
           - `blank`: If ``True``, allow this field to have an empty value.
           - `required`: If ``True``, do not allow this field to be unspecified.
           - `default`: The default value to use for this field if no other value
@@ -53,15 +51,14 @@ class MongoBaseField(object):
             'verbose_name', verbose_name)
         self.mongo_name = validate_string_or_none('mongo_name', mongo_name)
         self.primary_key = validate_boolean('primary_key', primary_key)
-        # "attname" is the attribute name of this field on the Model.
-        # We may be assigned a different name by the Model's metaclass later on.
-        self.unique = validate_boolean('unique', unique)
         self.blank = validate_boolean('blank', blank)
         self.required = validate_boolean('required', required)
         self.choices = validate_list_tuple_or_none('choices', choices)
         self.validators = validate_list_tuple_or_none(
             'validators', validators or [])
         self.default = default
+        # "attname" is the attribute name of this field on the Model.
+        # We may be assigned a different name by the Model's metaclass later on.
         self.attname = mongo_name
         if self.primary_key and self.mongo_name not in (None, '_id'):
             raise ValueError(

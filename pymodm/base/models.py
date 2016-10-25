@@ -155,6 +155,12 @@ class TopLevelMongoModelMetaclass(MongoModelMetaclass):
             new_class.add_to_class('objects', manager)
         new_class._default_manager = manager
 
+        # Create any indexes defined in our options.
+        # Only do this if we inherit directly from MongoModel.
+        indexes = new_class._mongometa.indexes
+        if indexes and any(base is MongoModel for base in bases):
+            new_class._mongometa.collection.create_indexes(indexes)
+
         return new_class
 
     def _find_manager(cls):
@@ -418,6 +424,9 @@ class MongoModel(with_metaclass(TopLevelMongoModelMetaclass, MongoModelBase)):
         when reading documents.
       - `write_concern`: The :class:`~pymongo.write_concern.WriteConcern` to use
         for write operations.
+      - `indexes`: This is a list of :class:`~pymongo.operations.IndexModel`
+        instances that describe the indexes that should be created for this
+        model. Indexes are created when the class definition is evaluated.
 
     .. note:: Creating an instance of MongoModel does not create a document in
               the database.

@@ -14,6 +14,8 @@
 
 from bson import SON
 
+from pymongo.operations import IndexModel
+
 from pymodm import fields, MongoModel
 from pymodm.errors import InvalidModel
 
@@ -88,3 +90,16 @@ class ModelInheritanceTest(ODMTestCase):
     def test_final_metadata_storage(self):
         FinalModel().save()
         self.assertNotIn('_cls', DB.final_model.find_one())
+
+    def test_indexes(self):
+        class ModelWithIndexes(MongoModel):
+            product_id = fields.UUIDField()
+            name = fields.CharField()
+
+            class Meta:
+                indexes = [
+                    IndexModel([('product_id', 1), ('name', 1)], unique=True)
+                ]
+
+        index_info = DB.model_with_indexes.index_information()
+        self.assertTrue(index_info['product_id_1_name_1']['unique'])
