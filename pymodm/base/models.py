@@ -156,9 +156,8 @@ class TopLevelMongoModelMetaclass(MongoModelMetaclass):
         new_class._default_manager = manager
 
         # Create any indexes defined in our options.
-        # Only do this if we inherit directly from MongoModel.
         indexes = new_class._mongometa.indexes
-        if indexes and any(base is MongoModel for base in bases):
+        if indexes:
             new_class._mongometa.collection.create_indexes(indexes)
 
         return new_class

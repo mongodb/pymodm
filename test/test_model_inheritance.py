@@ -101,5 +101,9 @@ class ModelInheritanceTest(ODMTestCase):
                     IndexModel([('product_id', 1), ('name', 1)], unique=True)
                 ]
 
+        # No Exception.
+        class ChildModel(ModelWithIndexes):
+            pass
+
         index_info = DB.model_with_indexes.index_information()
         self.assertTrue(index_info['product_id_1_name_1']['unique'])
