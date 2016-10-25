@@ -22,6 +22,9 @@ from pymongo import uri_parser, MongoClient
 from pymodm.compat import reraise
 
 
+__all__ = ['connect']
+
+
 """Information stored with each connection alias."""
 ConnectionInfo = namedtuple(
     'ConnectionInfo', ('parsed_uri', 'conn_string', 'database'))

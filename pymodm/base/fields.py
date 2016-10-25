@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from pymodm import validators
 from pymodm.common import (
     _import, get_document,
     validate_string_or_none, validate_boolean, validate_list_tuple_or_none)
@@ -215,3 +216,37 @@ class RelatedModelFieldsBase(MongoBaseField):
                   issubclass(self.__model, MongoModelBase)):
                 self.__related_model = self.__model
         return self.__related_model
+
+
+class GeoJSONField(MongoBaseField):
+    """Base class for GeoJSON fields."""
+
+    def __init__(self, verbose_name=None, mongo_name=None, **kwargs):
+        """
+        :parameters:
+          - `verbose_name`: A human-readable name for the Field.
+          - `mongo_name`: The name of this field when stored in MongoDB.
+
+        .. seealso:: constructor for
+                     :class:`~pymodm.base.fields.MongoBaseField`
+        """
+        super(GeoJSONField, self).__init__(verbose_name=verbose_name,
+                                           mongo_name=mongo_name,
+                                           **kwargs)
+
+        self.validators.append(self.validate_geojson)
+
+    @classmethod
+    def validate_geojson(cls, value):
+        validators.validator_for_type(dict)(value)
+        validators.validator_for_geojson_type(
+            cls._geojson_name)(value)
+        coordinates = value.get('coordinates')
+        validators.validator_for_type(
+            (list, tuple), 'Coordinates')(coordinates)
+        cls.validate_coordinates(coordinates)
+
+    def to_python(self, value):
+        if isinstance(value, list):
+            return {'type': self._geojson_name, 'coordinates': value}
+        return value

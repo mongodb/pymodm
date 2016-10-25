@@ -13,3 +13,7 @@
 # limitations under the License.
 
 from pymodm.base.models import MongoModel, EmbeddedMongoModel
+
+from pymodm.base import models
+
+__all__ = models.__all__
