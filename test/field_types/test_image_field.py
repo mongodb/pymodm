@@ -33,7 +33,7 @@ class ImageFieldTestCase(FieldTestCase):
 
     def test_set_file(self):
         # Create directly with builtin 'open'.
-        with open(self.image_src) as image_src:
+        with open(self.image_src, 'rb') as image_src:
             mwi = self.ModelWithImage(image_src).save()
         mwi.refresh_from_db()
         # Uploaded!
@@ -42,7 +42,7 @@ class ImageFieldTestCase(FieldTestCase):
 
     def test_set_file_object(self):
         # Create with File object.
-        with open(self.image_src) as image_src:
+        with open(self.image_src, 'rb') as image_src:
             wrapped = File(image_src, metadata={'contentType': 'image/png'})
             mwi = self.ModelWithImage(wrapped).save()
         mwi.refresh_from_db()
@@ -51,7 +51,7 @@ class ImageFieldTestCase(FieldTestCase):
         self.assertEqual('image/png', mwi.image.metadata.get('contentType'))
 
     def test_image_field_file_properties(self):
-        with open(self.image_src) as image_src:
+        with open(self.image_src, 'rb') as image_src:
             mwi = self.ModelWithImage(image_src).save()
         self.assertEqual(self.image_width, mwi.image.width)
         self.assertEqual(self.image_height, mwi.image.height)
