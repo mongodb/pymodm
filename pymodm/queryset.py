@@ -433,6 +433,11 @@ class QuerySet(object):
                 upsert=True)
 
         """
+        # If we're doing an upsert on a non-final class, we need to add '_cls'
+        # manually, since it won't be saved with upsert alone.
+        if kwargs.get('upsert') and not self._model._mongometa.final:
+            dollar_set = update.setdefault('$set', {})
+            dollar_set['_cls'] = self._model._mongometa.object_name
         return self._collection.update_many(
             self.raw_query, update, **kwargs).modified_count
 
