@@ -3,9 +3,9 @@ PyMODM
 ======
 
 
-.. image:: http://jenkins.bci.10gen.cc:8080/job/pymodm/badge/icon
+.. image:: https://travis-ci.org/mongodb/pymodm.svg?branch=master
    :alt: View build status
-   :target: http://jenkins.bci.10gen.cc:8080/job/pymodm
+   :target: https://travis-ci.org/mongodb/pymodm
 
 .. image:: https://badges.gitter.im/mongodb/pymodm.svg
    :alt: Join the chat at https://gitter.im/mongodb/pymodm
