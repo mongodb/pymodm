@@ -48,7 +48,7 @@ except ImportError:
 
 
 from pymodm import validators
-from pymodm.base.fields import RelatedModelFieldsBase
+from pymodm.base.fields import RelatedModelFieldsBase, GeoJSONField
 from pymodm.common import _import
 from pymodm.compat import text_type, string_types, PY3
 from pymodm.connection import _get_db
@@ -56,6 +56,19 @@ from pymodm.errors import ValidationError, ConfigurationError
 from pymodm.base.fields import MongoBaseField
 from pymodm.files import File, GridFSStorage, FieldFile, ImageFieldFile
 from pymodm.vendor import parse_datetime
+
+
+__all__ = [
+    'CharField', 'IntegerField', 'BigIntegerField', 'ObjectIdField',
+    'BinaryField', 'BooleanField', 'DateTimeField', 'Decimal128Field',
+    'EmailField', 'FileField', 'ImageField', 'FloatField',
+    'GenericIPAddressField', 'URLField', 'UUIDField',
+    'RegularExpressionField', 'JavaScriptField', 'TimestampField',
+    'DictField', 'OrderedDictField', 'ListField', 'PointField',
+    'LineStringField', 'PolygonField', 'MultiPointField',
+    'MultiLineStringField', 'MultiPolygonField', 'GeometryCollectionField',
+    'EmbeddedDocumentField', 'EmbeddedDocumentListField', 'ReferenceField'
+]
 
 
 class CharField(MongoBaseField):
@@ -788,39 +801,6 @@ class ListField(MongoBaseField):
 #
 # Geospatial field types.
 #
-
-class GeoJSONField(MongoBaseField):
-    """Base class for GeoJSON fields."""
-
-    def __init__(self, verbose_name=None, mongo_name=None, **kwargs):
-        """
-        :parameters:
-          - `verbose_name`: A human-readable name for the Field.
-          - `mongo_name`: The name of this field when stored in MongoDB.
-
-        .. seealso:: constructor for
-                     :class:`~pymodm.base.fields.MongoBaseField`
-        """
-        super(GeoJSONField, self).__init__(verbose_name=verbose_name,
-                                           mongo_name=mongo_name,
-                                           **kwargs)
-
-        self.validators.append(self.validate_geojson)
-
-    @classmethod
-    def validate_geojson(cls, value):
-        validators.validator_for_type(dict)(value)
-        validators.validator_for_geojson_type(
-            cls._geojson_name)(value)
-        coordinates = value.get('coordinates')
-        validators.validator_for_type(
-            (list, tuple), 'Coordinates')(coordinates)
-        cls.validate_coordinates(coordinates)
-
-    def to_python(self, value):
-        if isinstance(value, list):
-            return {'type': self._geojson_name, 'coordinates': value}
-        return value
 
 
 class PointField(GeoJSONField):

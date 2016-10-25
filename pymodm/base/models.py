@@ -28,6 +28,9 @@ from pymodm.fields import ObjectIdField
 from pymodm.manager import Manager
 
 
+__all__ = ['MongoModel', 'EmbeddedMongoModel']
+
+
 class MongoModelMetaclass(type):
     """Base metaclass for all Models."""
 

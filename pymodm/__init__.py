@@ -14,6 +14,10 @@
 
 from pymodm.base import MongoModel, EmbeddedMongoModel
 from pymodm.connection import connect
+from pymodm.fields import *
 
+from pymodm import base, connection, fields
+
+__all__ = fields.__all__ + connection.__all__ + base.__all__
 
 version = '0.2.dev0'
