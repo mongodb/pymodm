@@ -78,6 +78,8 @@ Here's a basic example of how to define some models and connect them to MongoDB:
 
 .. code-block:: python
 
+  from pymongo import TEXT
+  from pymongo.operations import IndexModel
   from pymodm import connect, fields, MongoModel, EmbeddedMongoModel
 
 
@@ -105,6 +107,9 @@ Here's a basic example of how to define some models and connect them to MongoDB:
       # database.
       comments = fields.EmbeddedDocumentListField('Comment')
 
+      class Meta:
+          # Text index on content can be used for text search.
+          indexes = [IndexModel([('content', TEXT)])]
 
   # This is an "embedded" model and will be stored as a sub-document.
   class Comment(EmbeddedMongoModel):
