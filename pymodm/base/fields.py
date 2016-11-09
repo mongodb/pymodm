@@ -135,8 +135,12 @@ class MongoBaseField(object):
     def validate(self, value):
         """Validate the value of this field."""
         # If the field hasn't been set, then don't validate.
-        if not self.blank and self.is_blank(value):
-            raise ValidationError('must not be blank (was: %r)' % value)
+        if self.is_blank(value):
+            if self.blank:
+                # Allowed blank fields don't need further validation.
+                return
+            else:
+                raise ValidationError('must not be blank (was: %r)' % value)
 
         value = self.to_python(value)
 
