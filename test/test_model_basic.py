@@ -15,6 +15,8 @@
 from test import ODMTestCase, DB
 from test.models import User
 
+from pymodm import MongoModel, CharField
+
 
 class BasicModelTestCase(ODMTestCase):
 
@@ -46,3 +48,12 @@ class BasicModelTestCase(ODMTestCase):
             {'$set': {'phone': 1234567}})
         gary.refresh_from_db()
         self.assertEqual(1234567, gary.phone)
+
+    def test_blank_field(self):
+        class ModelWithBlankField(MongoModel):
+            field = CharField(blank=True)
+
+        instance = ModelWithBlankField(None)
+        # No exception.
+        instance.full_clean()
+        self.assertIsNone(instance.field)
