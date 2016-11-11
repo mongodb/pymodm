@@ -23,18 +23,15 @@ documentation`_ or take a look at some `examples`_.
 .. _official documentation: https://pymodm.readthedocs.io
 .. _examples: https://github.com/mongodb/pymodm/tree/master/example
 
-Project Goals
-=============
+Why PyMODM?
+===========
 
-PyMODM is developed and maintained by the MongoDB engineering team and has the
-following goals:
-
-- Provide an easy, object-oriented interface for working with MongoDB documents
-  and collections.
-- Provide extensible core functionality to power integrations with other
-  platforms like Django.
-- Be quick to adopt new MongoDB features.
-- Be very responsive to community feedback.
+PyMODM is a "core" ODM, meaning that it provides simple, extensible
+functionality that can be leveraged by other libraries to target platforms like
+Django. At the same time, PyMODM is powerful enough to be used for developing
+applications on its own. Because MongoDB engineers are involved in developing
+and maintaining the project, PyMODM will also be quick to adopt new MongoDB
+features.
 
 Support / Feedback
 ==================
