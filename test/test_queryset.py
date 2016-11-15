@@ -92,6 +92,13 @@ class QuerySetTestCase(ODMTestCase):
         self.assertEqual('Amarth', results[2].lname)
         self.assertEqual('Tomato', results[3].lname)
 
+    def test_project(self):
+        results = User.objects.project({'lname': 1})
+        for result in results:
+            self.assertIsNotNone(result.lname)
+            self.assertIsNotNone(result.pk)
+            self.assertIsNone(result.phone)
+
     def test_only(self):
         results = User.objects.only('phone')
         for result in results:
