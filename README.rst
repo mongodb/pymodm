@@ -20,7 +20,7 @@ A generic ODM around PyMongo_, the MongoDB Python driver. PyMODM works on Python
 documentation`_ or take a look at some `examples`_.
 
 .. _PyMongo: https://pypi.python.org/pypi/pymongo
-.. _official documentation: https://pymodm.readthedocs.io
+.. _official documentation: http://pymodm.readthedocs.io/en/stable
 .. _examples: https://github.com/mongodb/pymodm/tree/master/example
 
 Why PyMODM?
