@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import datetime
+import time
 
 from bson.tz_util import utc, FixedOffset
 
@@ -79,14 +80,18 @@ class DateTimeFieldTestCase(FieldTestCase):
             datetime.datetime(2006, 7, 2),
             datetime.date(2006, 7, 2))
 
+        now = time.time()
+        self.assertConversion(
+            self.field,
+            datetime.datetime.utcfromtimestamp(now),
+            now)
+
         for expected, to_convert in DATETIME_CASES:
             self.assertConversion(self.field, expected, to_convert)
 
     def test_validate(self):
         msg = 'cannot be converted to a datetime object'
         invalid_values = [
-            # Inconvertible type.
-            22,
             # Microseconds without seconds.
             '2006-7-2T123.456',
             # Nonsense timezone.
