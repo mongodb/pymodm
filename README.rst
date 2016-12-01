@@ -3,6 +3,10 @@ PyMODM
 ======
 
 
+.. image:: https://readthedocs.org/projects/pymodm/badge/?version=stable
+   :alt: Documentation
+   :target: http://pymodm.readthedocs.io/en/stable/?badge=stable
+
 .. image:: https://travis-ci.org/mongodb/pymodm.svg?branch=master
    :alt: View build status
    :target: https://travis-ci.org/mongodb/pymodm
@@ -11,14 +15,23 @@ PyMODM
    :alt: Join the chat at https://gitter.im/mongodb/pymodm
    :target: https://gitter.im/mongodb/pymodm?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
-A generic ODM around PyMongo_, the MongoDB Python driver. Its goal is to provide
-an easy, object-oriented interface to MongoDB documents. PyMODM works on Python
+A generic ODM around PyMongo_, the MongoDB Python driver. PyMODM works on Python
 2.7 as well as Python 3.3 and up. To learn more, you can browse the `official
 documentation`_ or take a look at some `examples`_.
 
 .. _PyMongo: https://pypi.python.org/pypi/pymongo
-.. _official documentation: https://pymodm.readthedocs.io
+.. _official documentation: http://pymodm.readthedocs.io/en/stable
 .. _examples: https://github.com/mongodb/pymodm/tree/master/example
+
+Why PyMODM?
+===========
+
+PyMODM is a "core" ODM, meaning that it provides simple, extensible
+functionality that can be leveraged by other libraries to target platforms like
+Django. At the same time, PyMODM is powerful enough to be used for developing
+applications on its own. Because MongoDB engineers are involved in developing
+and maintaining the project, PyMODM will also be quick to adopt new MongoDB
+features.
 
 Support / Feedback
 ==================
