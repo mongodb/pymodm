@@ -1,9 +1,11 @@
 # -*- encoding: utf-8 -*-
 
+import unittest
+
 from pymongo.collation import Collation, CollationStrength
 from pymodm import fields, MongoModel
 
-from test import ODMTestCase
+from test import ODMTestCase, MONGO_VERSION
 
 
 class ModelForCollations(MongoModel):
@@ -15,6 +17,11 @@ class ModelForCollations(MongoModel):
 
 
 class CollationTestCase(ODMTestCase):
+
+    @classmethod
+    @unittest.skipIf(MONGO_VERSION < (3, 4), 'Requires MongoDB >= 3.4')
+    def setUpClass(cls):
+        super(CollationTestCase, cls).setUpClass()
 
     def setUp(self):
         # Initial data.

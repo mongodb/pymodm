@@ -30,6 +30,10 @@ DB = CLIENT.odm_test
 
 connect('%s/%s' % (MONGO_URI, DB.name))
 
+# Get the version of MongoDB.
+server_info = pymongo.MongoClient(MONGO_URI).server_info()
+MONGO_VERSION = tuple(server_info.get('versionArray', []))
+
 
 class ODMTestCase(unittest.TestCase):
 
