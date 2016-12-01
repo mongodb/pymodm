@@ -415,8 +415,9 @@ class MongoModel(with_metaclass(TopLevelMongoModelMetaclass, MongoModelBase)):
       - `codec_options`: An instance of
         :class:`~bson.codec_options.CodecOptions` to use for reading and writing
         documents of this model type.
-      - `final`: Whether to support inheritance on this model. ``True`` by
-        default.
+      - `final`: Whether to restrict inheritance on this model. If ``True``, the 
+        ``_cls`` field will not be stored in the document. ``False`` by
+        default. 
       - `cascade`: If ``True``, save all :class:`~pymodm.MongoModel` instances
         this object references when :meth:`~pymodm.MongoModel.save` is called
         on this object.
