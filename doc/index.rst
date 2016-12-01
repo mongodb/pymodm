@@ -30,6 +30,7 @@ Contents:
 
    api/index
    getting-started
+   changelog
 
 Changes
 -------
