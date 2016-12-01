@@ -16,7 +16,7 @@ import copy
 
 from pymodm import errors
 from pymodm.common import (
-    _import, validate_boolean, validate_list_or_tuple)
+    _import, validate_boolean, validate_list_or_tuple, validate_mapping)
 
 
 class QuerySet(object):
@@ -218,6 +218,33 @@ class QuerySet(object):
         """
         clone = self._clone()
         clone._order_by = ordering
+        return clone
+
+    def project(self, projection):
+        """Specify a raw MongoDB projection to use in QuerySet results.
+
+        This method overrides any previous projections on this QuerySet,
+        including those created with :meth:`~pymodm.queryset.QuerySet.only` and
+        :meth:`~pymodm.queryset.QuerySet.exclude`. Unlike these methods,
+        `project` allows projecting out the primary key. However, note that
+        objects that do not have their primary key cannot be re-saved to the
+        database.
+
+        :parameters:
+          - `projection`: A MongoDB projection document.
+
+        example::
+
+            >>> Vacation.objects.project({
+            ...     'destination': 1,
+            ...     'flights': {'$elemMatch': {'available': True}}}).first()
+            Vacation(destination='HAWAII',
+                     flights=[{'available': True, 'from': 'SFO'}])
+
+        """
+        projection = validate_mapping('projection', projection)
+        clone = self._clone()
+        clone._projection = projection
         return clone
 
     def only(self, *fields):
