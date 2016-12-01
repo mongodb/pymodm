@@ -241,8 +241,11 @@ class DateTimeField(MongoBaseField):
             parsed = parse_datetime(value)
             if parsed is not None:
                 return parsed
-        raise ValidationError(
-            '%r cannot be converted to a datetime object.' % value)
+        try:
+            return datetime.datetime.utcfromtimestamp(value)
+        except TypeError:
+            raise ValidationError(
+                '%r cannot be converted to a datetime object.' % value)
 
     def to_python(self, value):
         try:
