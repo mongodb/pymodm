@@ -40,6 +40,7 @@ class QuerySet(object):
         self._projection = None
         self._return_raw = False
         self._select_related_fields = None
+        self._collation = self._model._mongometa.collation
         # Select all subclasses of the given Model.
         self._types_query = {}
         if not self._model._mongometa.final:
@@ -57,7 +58,7 @@ class QuerySet(object):
         """Return an identical copy of this QuerySet."""
         clone_properties = (
             '_order_by', '_limit', '_skip', '_projection', '_return_raw',
-            '_select_related_fields')
+            '_select_related_fields', '_collation')
 
         clone = QuerySet(model=model or self._model, query=query or self._query)
 
@@ -113,7 +114,8 @@ class QuerySet(object):
     def count(self):
         """Return the number of objects in this QuerySet."""
         return self._collection.count(
-            self.raw_query, skip=self._skip, limit=self._limit)
+            self.raw_query, skip=self._skip, limit=self._limit,
+            collation=self._collation)
 
     def first(self):
         """Return the first object from this QuerySet."""
@@ -165,6 +167,8 @@ class QuerySet(object):
             before_pipeline.append({'$skip': self._skip})
         if self._limit:
             before_pipeline.append({'$limit': self._limit})
+
+        kwargs.setdefault('collation', self._collation)
 
         return self._collection.aggregate(
             before_pipeline + list(pipeline), **kwargs)
@@ -321,6 +325,20 @@ class QuerySet(object):
         clone._return_raw = True
         return clone
 
+    def collation(self, collation):
+        """Specify a collation to use for string comparisons.
+
+        This will override the default collation of the collection.
+
+        :parameters:
+          - `collation`: An instance of `~pymongo.collation.Collation` or a
+            ``dict`` specifying the collation.
+
+        """
+        clone = self._clone()
+        clone._collation = collation
+        return clone
+
     #
     # Object-manipulation methods.
     #
@@ -423,7 +441,8 @@ class QuerySet(object):
 
             # If we've made it this far, it's ok to delete the objects in this
             # QuerySet.
-            result = self._collection.delete_many(self._query).deleted_count
+            result = self._collection.delete_many(
+                self._query, collation=self._collation).deleted_count
 
             # Apply the rest of the delete rules.
             for rule_entry in self._model._mongometa.delete_rules:
@@ -443,7 +462,8 @@ class QuerySet(object):
 
             return result
 
-        return self._collection.delete_many(self._query).deleted_count
+        return self._collection.delete_many(
+            self._query, collation=self._collation).deleted_count
 
     def update(self, update, **kwargs):
         """Update the objects in this QuerySet and return the number updated.
@@ -465,6 +485,7 @@ class QuerySet(object):
         if kwargs.get('upsert') and not self._model._mongometa.final:
             dollar_set = update.setdefault('$set', {})
             dollar_set['_cls'] = self._model._mongometa.object_name
+        kwargs.setdefault('collation', self._collation)
         return self._collection.update_many(
             self.raw_query, update, **kwargs).modified_count
 
@@ -485,7 +506,8 @@ class QuerySet(object):
             sort=self._order_by,
             limit=self._limit,
             skip=self._skip,
-            projection=self._projection)
+            projection=self._projection,
+            collation=self._collation)
 
     def __iter__(self):
         if self._return_raw:
