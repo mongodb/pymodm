@@ -156,7 +156,7 @@ class TopLevelMongoModelMetaclass(MongoModelMetaclass):
         if manager is None:
             manager = Manager()
             new_class.add_to_class('objects', manager)
-        new_class._default_manager = manager
+        new_class._mongometa.default_manager = manager
 
         # Create any indexes defined in our options.
         indexes = new_class._mongometa.indexes
@@ -479,7 +479,7 @@ class MongoModel(with_metaclass(TopLevelMongoModelMetaclass, MongoModelBase)):
             self.__queryset = None
         if (self.__queryset is None and
                 not self._mongometa.pk.is_undefined(self)):
-            self.__queryset = self.__class__._default_manager.raw(
+            self.__queryset = self.__class__._mongometa.default_manager.raw(
                 {'_id': self._mongometa.pk.to_mongo(self.pk)})
         return self.__queryset
 

@@ -430,7 +430,7 @@ class QuerySet(object):
                 related_model, related_field = rule_entry
                 rule = self._model._mongometa.delete_rules[rule_entry]
                 if ReferenceField.DENY == rule:
-                    related_qs = related_model._default_manager.raw(
+                    related_qs = related_model._mongometa.default_manager.raw(
                         {related_field: {'$in': refs}}).values()
                     if related_qs.count() > 0:
                         raise errors.OperationError(
@@ -451,7 +451,7 @@ class QuerySet(object):
                 rule = self._model._mongometa.delete_rules[rule_entry]
                 if ReferenceField.DO_NOTHING == rule:
                     continue
-                related_qs = (related_model._default_manager
+                related_qs = (related_model._mongometa.default_manager
                               .raw({related_field: {'$in': refs}})
                               .values())
                 if ReferenceField.NULLIFY == rule:
