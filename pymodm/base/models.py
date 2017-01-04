@@ -47,7 +47,10 @@ class MongoModelMetaclass(type):
 
         # User-defined or inherited metadata
         meta = attrs.get('Meta', getattr(new_class, 'Meta', None))
-        options = MongoOptions(meta)
+        # Allow the options class to be pluggable.
+        # Pop it from attrs, since it's not useful in the final class.
+        options_class = attrs.pop('_options_class', MongoOptions)
+        options = options_class(meta)
 
         # Let the Options object take care of merging relevant options.
         new_class.add_to_class('_mongometa', options)
