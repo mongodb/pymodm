@@ -142,8 +142,14 @@ class MongoModelMetaclass(type):
 class TopLevelMongoModelMetaclass(MongoModelMetaclass):
     """Metaclass for all top-level (i.e. not embedded) Models."""
     def __new__(mcls, name, bases, attrs):
+        # Allow the manager class to be pluggable.
+        # Pop it from attrs now, so that the class doesn't become an attribute
+        # of the new class.
+        manager_class = attrs.pop('_manager_class', Manager)
+
         new_class = super(TopLevelMongoModelMetaclass, mcls).__new__(
             mcls, name, bases, attrs)
+
         # Conceptually the same as 'if new_class is MongoModelBase'.
         if not hasattr(new_class, '_mongometa'):
             return new_class
@@ -157,7 +163,7 @@ class TopLevelMongoModelMetaclass(MongoModelMetaclass):
         # Add QuerySet Manager.
         manager = new_class._find_manager()
         if manager is None:
-            manager = Manager()
+            manager = manager_class()
             new_class.add_to_class('objects', manager)
         new_class._mongometa.default_manager = manager
 
