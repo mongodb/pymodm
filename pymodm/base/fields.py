@@ -101,6 +101,10 @@ class MongoBaseField(object):
     def verbose_name(self):
         return self._verbose_name or self.attname or self.mongo_name
 
+    @verbose_name.setter
+    def verbose_name(self, name):
+        self._verbose_name = name
+
     def to_python(self, value):
         """Coerce the raw value for this field to an appropriate Python type.
 
