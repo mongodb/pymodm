@@ -48,7 +48,8 @@ class ManagerTestCase(ODMTestCase):
         # Check that our custom Manager was installed.
         self.assertIsInstance(BookCredit.contributors, CustomManager)
         # Contributors should be the default manager, not more_contributors.
-        self.assertIs(BookCredit.contributors, BookCredit._default_manager)
+        self.assertIs(BookCredit.contributors,
+                      BookCredit._mongometa.default_manager)
 
     def test_get_queryset(self):
         self.assertIsInstance(
