@@ -105,3 +105,6 @@ class BasicModelTestCase(ODMTestCase):
 
         self.assertEqual('Test', retrieved.name)
         self.assertRaises(AttributeError, getattr, retrieved, 'age')
+
+        retrieved.save()
+        self.assertNotIn('age', DB.document.find_one())
