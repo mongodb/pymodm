@@ -15,7 +15,7 @@
 from test import ODMTestCase, DB
 from test.models import User
 
-from pymodm import MongoModel, CharField
+from pymodm import MongoModel, CharField, IntegerField
 from pymodm.errors import InvalidModel, ValidationError
 
 
@@ -88,3 +88,20 @@ class BasicModelTestCase(ODMTestCase):
         self.assertIn('fname', message)
         self.assertIsInstance(message['fname'], list)
         self.assertIn('field is required.', message['fname'])
+
+    def test_remove_field_from_model(self):
+        class Document(MongoModel):
+            name = CharField()
+            age = IntegerField()
+
+        Document('Test', 42).save()
+
+        # Redefine Document.
+        class Document(MongoModel):
+            name = CharField()
+
+        # No error.
+        retrieved = Document.objects.raw({'name': 'Test'}).first()
+
+        self.assertEqual('Test', retrieved.name)
+        self.assertRaises(AttributeError, getattr, retrieved, 'age')

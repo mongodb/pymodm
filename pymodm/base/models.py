@@ -254,10 +254,7 @@ class MongoModelBase(object):
                 continue
             elif '_id' == field and not self._mongometa.implicit_id:
                 setattr(self, self._mongometa.pk.attname, dict[field])
-            elif field not in field_names:
-                raise ValueError(
-                    'Unrecognized field name %r' % field)
-            else:
+            elif field in field_names:
                 setattr(self, field_names[field], dict[field])
 
     @classmethod
