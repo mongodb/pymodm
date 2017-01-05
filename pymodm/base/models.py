@@ -249,16 +249,17 @@ class MongoModelBase(object):
             field.mongo_name: field.attname
             for field in self._mongometa.get_fields()
         }
+        ignore_unknown = self._mongometa.ignore_unknown_fields
         for field in dict:
             if '_cls' == field:
                 continue
             elif '_id' == field and not self._mongometa.implicit_id:
                 setattr(self, self._mongometa.pk.attname, dict[field])
-            elif field not in field_names:
+            elif field in field_names:
+                setattr(self, field_names[field], dict[field])
+            elif not ignore_unknown:
                 raise ValueError(
                     'Unrecognized field name %r' % field)
-            else:
-                setattr(self, field_names[field], dict[field])
 
     @classmethod
     def from_document(cls, document):
@@ -580,6 +581,12 @@ class MongoModel(
       - `indexes`: This is a list of :class:`~pymongo.operations.IndexModel`
         instances that describe the indexes that should be created for this
         model. Indexes are created when the class definition is evaluated.
+      - `ignore_unknown_fields`: If ``True``, fields that aren't defined in the
+        model will be ignored when parsing documents from MongoDB, such as in
+        :meth:`~pymodm.MongoModel.from_document`. By default, unknown fields
+        will cause a ``ValueError`` to be raised. Note that with this option
+        enabled, calling :meth:`~pymodm.MongoModel.save` will erase these
+        fields for that model instance.
 
     .. note:: Creating an instance of MongoModel does not create a document in
               the database.
