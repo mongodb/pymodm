@@ -392,69 +392,7 @@ class MongoModelBase(object):
         return NotImplemented
 
 
-class MongoModel(with_metaclass(TopLevelMongoModelMetaclass, MongoModelBase)):
-    """Base class for all top-level models.
-
-    A MongoModel definition typically includes a number of field instances
-    and possibly a ``Meta`` class attribute that provides metadata or settings
-    specific to the model.
-
-    MongoModels can be instantiated either with positional or keyword arguments.
-    Positional arguments are bound to the fields in the order the fields are
-    defined on the model. Keyword argument names are the same as the names of
-    the fields::
-
-        from pymongo.read_preferences import ReadPreference
-
-        class User(MongoModel):
-            email = fields.EmailField(primary_key=True)
-            name = fields.CharField()
-
-            class Meta:
-                # Read from secondaries.
-                read_preference = ReadPreference.SECONDARY
-
-        # Instantiate User using positional arguments:
-        jane = User('jane@janesemailaddress.net', 'Jane')
-        # Keyword arguments:
-        roy = User(name='Roy', email='roy@roysemailaddress.net')
-
-    Note that :func:`~pymodm.connection.connect` has to be called (defining the
-    respective connection alias, if any) before any :class:`~pymodm.MongoModel`
-    can be used with that alias. If ``indexes`` is defined on ``Meta``, then
-    this has to be before the MongoModel class is evaluated.
-
-    .. _metadata-attributes:
-
-    The following metadata attributes are available:
-
-      - `connection_alias`: The alias of the connection to use for the moel.
-      - `collection_name`: The name of the collection to use. By default, this
-        is the same name as the model, converted to snake case.
-      - `codec_options`: An instance of
-        :class:`~bson.codec_options.CodecOptions` to use for reading and writing
-        documents of this model type.
-      - `final`: Whether to restrict inheritance on this model. If ``True``, the
-        ``_cls`` field will not be stored in the document. ``False`` by
-        default.
-      - `cascade`: If ``True``, save all :class:`~pymodm.MongoModel` instances
-        this object references when :meth:`~pymodm.MongoModel.save` is called
-        on this object.
-      - `read_preference`: The :class:`~pymongo.read_preferences.ReadPreference`
-        to use when reading documents.
-      - `read_concern`: The :class:`~pymongo.read_concern.ReadConcern` to use
-        when reading documents.
-      - `write_concern`: The :class:`~pymongo.write_concern.WriteConcern` to use
-        for write operations.
-      - `indexes`: This is a list of :class:`~pymongo.operations.IndexModel`
-        instances that describe the indexes that should be created for this
-        model. Indexes are created when the class definition is evaluated.
-
-    .. note:: Creating an instance of MongoModel does not create a document in
-              the database.
-
-    """
-
+class TopLevelMongoModel(MongoModelBase):
     @classmethod
     def register_delete_rule(cls, related_model, related_field, rule):
         """Specify what to do when an instance of this class is deleted.
@@ -581,6 +519,72 @@ class MongoModel(with_metaclass(TopLevelMongoModelMetaclass, MongoModelBase)):
             elif isinstance(other, DBRef):
                 return self.pk == other.id
         return self is other
+
+
+class MongoModel(
+        with_metaclass(TopLevelMongoModelMetaclass, TopLevelMongoModel)):
+    """Base class for all top-level models.
+
+    A MongoModel definition typically includes a number of field instances
+    and possibly a ``Meta`` class attribute that provides metadata or settings
+    specific to the model.
+
+    MongoModels can be instantiated either with positional or keyword arguments.
+    Positional arguments are bound to the fields in the order the fields are
+    defined on the model. Keyword argument names are the same as the names of
+    the fields::
+
+        from pymongo.read_preferences import ReadPreference
+
+        class User(MongoModel):
+            email = fields.EmailField(primary_key=True)
+            name = fields.CharField()
+
+            class Meta:
+                # Read from secondaries.
+                read_preference = ReadPreference.SECONDARY
+
+        # Instantiate User using positional arguments:
+        jane = User('jane@janesemailaddress.net', 'Jane')
+        # Keyword arguments:
+        roy = User(name='Roy', email='roy@roysemailaddress.net')
+
+    Note that :func:`~pymodm.connection.connect` has to be called (defining the
+    respective connection alias, if any) before any :class:`~pymodm.MongoModel`
+    can be used with that alias. If ``indexes`` is defined on ``Meta``, then
+    this has to be before the MongoModel class is evaluated.
+
+    .. _metadata-attributes:
+
+    The following metadata attributes are available:
+
+      - `connection_alias`: The alias of the connection to use for the moel.
+      - `collection_name`: The name of the collection to use. By default, this
+        is the same name as the model, converted to snake case.
+      - `codec_options`: An instance of
+        :class:`~bson.codec_options.CodecOptions` to use for reading and writing
+        documents of this model type.
+      - `final`: Whether to restrict inheritance on this model. If ``True``, the
+        ``_cls`` field will not be stored in the document. ``False`` by
+        default.
+      - `cascade`: If ``True``, save all :class:`~pymodm.MongoModel` instances
+        this object references when :meth:`~pymodm.MongoModel.save` is called
+        on this object.
+      - `read_preference`: The :class:`~pymongo.read_preferences.ReadPreference`
+        to use when reading documents.
+      - `read_concern`: The :class:`~pymongo.read_concern.ReadConcern` to use
+        when reading documents.
+      - `write_concern`: The :class:`~pymongo.write_concern.WriteConcern` to use
+        for write operations.
+      - `indexes`: This is a list of :class:`~pymongo.operations.IndexModel`
+        instances that describe the indexes that should be created for this
+        model. Indexes are created when the class definition is evaluated.
+
+    .. note:: Creating an instance of MongoModel does not create a document in
+              the database.
+
+    """
+    pass
 
 
 class EmbeddedMongoModel(with_metaclass(MongoModelMetaclass, MongoModelBase)):
