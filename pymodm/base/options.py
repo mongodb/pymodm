@@ -84,34 +84,24 @@ class MongoOptions(object):
         """Retrieve a Fields instance with the given attribute name."""
         return self.fields_attname_dict.get(attname)
 
-    def _add_field(self, field_inst):
-        """Helper for add_field."""
+    def add_field(self, field_inst):
+        """Add or replace a given Field."""
+        orig_field = (self.get_field(field_inst.mongo_name) or
+                      self.get_field_from_attname(field_inst.attname))
+        if orig_field:
+            if field_inst.attname != orig_field.attname:
+                raise InvalidModel('%r cannot have the same mongo_name of '
+                                   'existing field %r' % (field_inst.attname,
+                                                          orig_field.attname))
+            # Remove the field as it may have a different MongoDB name.
+            del self.fields_dict[orig_field.mongo_name]
+            self.fields_ordered.remove(orig_field)
+
         self.fields_dict[field_inst.mongo_name] = field_inst
         self.fields_attname_dict[field_inst.attname] = field_inst
         index = bisect(self.fields_ordered, field_inst)
         self.fields_ordered.insert(index, field_inst)
 
-    def add_field(self, field_inst):
-        """Add or replace a Field with a given name."""
-        field_name = field_inst.mongo_name
-        attname = field_inst.attname
-        if field_name in self.fields_dict:
-            # Replace a field with the same MongoDB name.
-            orig_field = self.fields_dict[field_name]
-            if attname != orig_field.attname:
-                raise InvalidModel('%r cannot have the same mongo_name of '
-                                   'existing field %r' % (attname,
-                                                          orig_field.attname))
-            self.fields_ordered.remove(orig_field)
-            self._add_field(field_inst)
-        elif attname in self.fields_attname_dict:
-            # Replace a field with the same attribute name.
-            orig_field = self.fields_attname_dict[attname]
-            self.fields_dict.pop(orig_field.mongo_name, None)
-            self.fields_ordered.remove(orig_field)
-            self._add_field(field_inst)
-        else:
-            self._add_field(field_inst)
         # Set the primary key if we don't have one yet, or it if is implicit.
         if field_inst.primary_key and self.pk is None or self.implicit_id:
             self.pk = field_inst
