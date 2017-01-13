@@ -62,11 +62,13 @@ class BasicModelTestCase(ODMTestCase):
     def test_same_mongo_name(self):
         msg = '.* cannot have the same mongo_name of existing field .*'
         with self.assertRaisesRegex(InvalidModel, msg):
-            class SameMongoName(User):
-                address = CharField(mongo_name='lname')
+            class SameMongoName(MongoModel):
+                field = CharField()
+                new_field = CharField(mongo_name='field')
 
-        class Model(MongoModel):
+        class Parent(MongoModel):
             field = CharField(mongo_name='child_field')
+
         with self.assertRaisesRegex(InvalidModel, msg):
-            class SameMongoName(Model):
+            class SameMongoNameAsParent(Parent):
                 child_field = CharField()
