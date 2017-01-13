@@ -20,6 +20,11 @@ from test import ODMTestCase
 from test.models import ParentModel, UserOtherCollection, User
 
 
+class Renamed(User):
+    # Override existing field and change mongo_name
+    address = fields.CharField(mongo_name='mongo_address')
+
+
 class MongoOptionsTestCase(ODMTestCase):
 
     def test_metadata(self):
@@ -53,6 +58,18 @@ class MongoOptionsTestCase(ODMTestCase):
     def test_get_field(self):
         self.assertIs(
             User.address, User._mongometa.get_field('address'))
+        self.assertIs(
+            Renamed.address, Renamed._mongometa.get_field('mongo_address'))
+        self.assertIsNone(Renamed._mongometa.get_field('address'))
+
+    def test_get_field_from_attname(self):
+        self.assertIs(
+            User.address, User._mongometa.get_field_from_attname('address'))
+        self.assertIs(
+            Renamed.address,
+            Renamed._mongometa.get_field_from_attname('address'))
+        self.assertIsNone(
+            Renamed._mongometa.get_field_from_attname('mongo_address'))
 
     def test_add_field(self):
         options = MongoOptions()

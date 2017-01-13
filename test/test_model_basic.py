@@ -16,6 +16,7 @@ from test import ODMTestCase, DB
 from test.models import User
 
 from pymodm import MongoModel, CharField
+from pymodm.errors import InvalidModel
 
 
 class BasicModelTestCase(ODMTestCase):
@@ -57,3 +58,10 @@ class BasicModelTestCase(ODMTestCase):
         # No exception.
         instance.full_clean()
         self.assertIsNone(instance.field)
+
+    def test_same_mongo_name(self):
+        msg = '.* cannot have the same mongo_name of existing field .*'
+        with self.assertRaisesRegex(InvalidModel, msg):
+            class SameMongoName(MongoModel):
+                field = CharField()
+                new_field = CharField(mongo_name='field')
