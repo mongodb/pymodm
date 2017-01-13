@@ -202,8 +202,8 @@ class QuerySet(object):
         example::
 
             >>> list(Vacation.objects.raw({"travel_method": "CAR"}))
-            [Vacatation(destination='NAPA', travel_method='CAR'),
-             Vacatation(destination='GRAND CANYON', travel_method='CAR')]
+            [Vacation(destination='NAPA', travel_method='CAR'),
+             Vacation(destination='GRAND CANYON', travel_method='CAR')]
 
         """
         query = self._query
@@ -265,7 +265,7 @@ class QuerySet(object):
             [Vacation(destination='HAWAII', travel_method='BOAT'),
              Vacation(destination='NAPA', travel_method='CAR')]
             >>> list(Vacation.objects.only('travel_method'))
-            [Vacatation(travel_method='BOAT'), Vacation(travel_method='CAR')]
+            [Vacation(travel_method='BOAT'), Vacation(travel_method='CAR')]
 
         """
         clone = self._clone()
@@ -286,7 +286,7 @@ class QuerySet(object):
             [Vacation(destination='HAWAII', travel_method='BOAT'),
              Vacation(destination='NAPA', travel_method='CAR')]
             >>> list(Vacation.objects.exclude('travel_method'))
-            [Vacatation(destination='HAWAII'), Vacation(destination='NAPA')]
+            [Vacation(destination='HAWAII'), Vacation(destination='NAPA')]
 
         """
         clone = self._clone()
