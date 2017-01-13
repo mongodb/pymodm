@@ -17,6 +17,7 @@ from bisect import bisect
 from bson.codec_options import CodecOptions
 
 from pymodm.connection import _get_db, DEFAULT_CONNECTION_ALIAS
+from pymodm.errors import InvalidModel
 from pymodm.fields import EmbeddedDocumentField, EmbeddedDocumentListField
 
 # Attributes that can be user-specified in MongoOptions.
@@ -35,6 +36,7 @@ class MongoOptions(object):
         self.collection_name = None
         self.codec_options = CodecOptions()
         self.fields_dict = {}
+        self.fields_attname_dict = {}
         self.fields_ordered = []
         self.implicit_id = False
         self.delete_rules = {}
@@ -75,23 +77,31 @@ class MongoOptions(object):
         self._auto_dereference = auto_dereference
 
     def get_field(self, field_name):
-        """Retrieve a Field instance with the given name."""
+        """Retrieve a Field instance with the given MongoDB name."""
         return self.fields_dict.get(field_name)
 
+    def get_field_from_attname(self, attname):
+        """Retrieve a Fields instance with the given attribute name."""
+        return self.fields_attname_dict.get(attname)
+
     def add_field(self, field_inst):
-        """Add or replace a Field with a given name."""
-        field_name = field_inst.mongo_name
-        if field_name in self.fields_dict:
-            # Replace a field with the same name.
-            orig_field = self.fields_dict[field_name]
-            self.fields_dict[field_name] = field_inst
+        """Add or replace a given Field."""
+        orig_field = (self.get_field(field_inst.mongo_name) or
+                      self.get_field_from_attname(field_inst.attname))
+        if orig_field:
+            if field_inst.attname != orig_field.attname:
+                raise InvalidModel('%r cannot have the same mongo_name of '
+                                   'existing field %r' % (field_inst.attname,
+                                                          orig_field.attname))
+            # Remove the field as it may have a different MongoDB name.
+            del self.fields_dict[orig_field.mongo_name]
             self.fields_ordered.remove(orig_field)
-            index = bisect(self.fields_ordered, field_inst)
-            self.fields_ordered.insert(index, field_inst)
-        else:
-            index = bisect(self.fields_ordered, field_inst)
-            self.fields_ordered.insert(index, field_inst)
-            self.fields_dict[field_name] = field_inst
+
+        self.fields_dict[field_inst.mongo_name] = field_inst
+        self.fields_attname_dict[field_inst.attname] = field_inst
+        index = bisect(self.fields_ordered, field_inst)
+        self.fields_ordered.insert(index, field_inst)
+
         # Set the primary key if we don't have one yet, or it if is implicit.
         if field_inst.primary_key and self.pk is None or self.implicit_id:
             self.pk = field_inst

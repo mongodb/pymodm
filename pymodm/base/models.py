@@ -58,7 +58,7 @@ class MongoModelMetaclass(type):
 
         def should_inherit_field(parent_class, field):
             # Never shadow fields defined on the new class.
-            if field.attname in new_class._mongometa.fields_dict:
+            if field.attname in new_class._mongometa.fields_attname_dict:
                 return False
             # Never inherit an implicit primary key.
             if field.primary_key and parent_class._mongometa.implicit_id:
