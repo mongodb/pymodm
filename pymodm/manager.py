@@ -48,8 +48,8 @@ class BaseManager(object):
 
     def __get__(self, instance, cls):
         """Only let Manager be accessible from Model classes."""
-        MongoModel = _import('pymodm.base.models.MongoModel')
-        if isinstance(instance, MongoModel):
+        TopLevelMongoModel = _import('pymodm.base.models.TopLevelMongoModel')
+        if isinstance(instance, TopLevelMongoModel):
             raise AttributeError(
                 "Manager isn't accessible via %s instances." % (cls.__name__,))
         return self
