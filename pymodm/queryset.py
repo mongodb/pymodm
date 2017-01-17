@@ -396,8 +396,8 @@ class QuerySet(object):
         """
         retrieve = validate_boolean('retrieve', retrieve)
         full_clean = validate_boolean('full_clean', full_clean)
-        MongoModel = _import('pymodm.base.models.MongoModel')
-        if isinstance(object_or_objects, MongoModel):
+        TopLevelMongoModel = _import('pymodm.base.models.TopLevelMongoModel')
+        if isinstance(object_or_objects, TopLevelMongoModel):
             object_or_objects = [object_or_objects]
         object_or_objects = validate_list_or_tuple(
             'object_or_objects', object_or_objects)
