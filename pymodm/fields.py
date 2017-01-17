@@ -1151,10 +1151,10 @@ class ReferenceField(RelatedModelFieldsBase):
                                              verbose_name=verbose_name,
                                              mongo_name=mongo_name,
                                              **kwargs)
-        MongoModel = _import('pymodm.base.models.MongoModel')
+        TopLevelMongoModel = _import('pymodm.base.models.TopLevelMongoModel')
         if (ReferenceField.DO_NOTHING != on_delete and
             not (isinstance(model, type) and
-                 issubclass(model, MongoModel))):
+                 issubclass(model, TopLevelMongoModel))):
             raise ValueError(
                 'Cannot specify on_delete without providing a Model class '
                 'for model (was: %r). For bidirectional delete rules, '

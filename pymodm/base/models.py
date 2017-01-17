@@ -230,12 +230,13 @@ class MongoModelBase(object):
     def _find_referenced_objects(self, value):
         """Find all referenced objects in the given object."""
         references = []
-        if isinstance(value, MongoModel):
+        if isinstance(value, TopLevelMongoModel):
             references.append(value)
         elif isinstance(value, list):
             for item in value:
                 references.extend(self._find_referenced_objects(item))
-        elif isinstance(value, EmbeddedMongoModel):
+        elif isinstance(value, MongoModelBase):
+            # EmbeddedMongoModel
             for field_name in value:
                 field_value = getattr(value, field_name)
                 references.extend(value._find_referenced_objects(field_value))
