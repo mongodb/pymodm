@@ -139,7 +139,7 @@ def _attach_objects_in_path(container, document_map, path=None):
         value = _get_value(container, part)
         _set_or_recurse(container, document_map, path, part, value)
     # Recurse on every field, if there's no path given.
-    elif hasattr(container, 'items'):
+    elif hasattr(container, 'items') or isinstance(container, MongoModelBase):
         # Container is a dict or a MongoModel of some kind.
         # Both iterate their keys.
         for key in container:
