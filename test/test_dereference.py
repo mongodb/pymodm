@@ -171,3 +171,35 @@ class DereferenceTestCase(ODMTestCase):
         post.delete()
         comment.refresh_from_db()
         self.assertIsNone(comment.post)
+
+    def test_list_embedded_reference_dereference(self):
+        # Test dereferencing items stored in a
+        # ListField(EmbeddedDocument(ReferenceField(X)))
+        class OtherModel(MongoModel):
+            name = fields.CharField()
+
+        class OtherRefModel(EmbeddedMongoModel):
+            ref = fields.ReferenceField(OtherModel)
+
+        class Container(MongoModel):
+            lst = fields.EmbeddedDocumentListField(OtherRefModel)
+
+        m1 = OtherModel('Aaron').save()
+        m2 = OtherModel('Bob').save()
+
+        container = Container(lst=[OtherRefModel(ref=m1),
+                                   OtherRefModel(ref=m2)])
+        container.save()
+
+        # Force ObjectIds.
+        container.refresh_from_db()
+        dereference(container)
+
+        # access through raw dicts not through __get__ of the field
+        # cause __get__ can perform a query to db for reference fields
+        # to dereference them using dereference_id function
+        self.assertEqual(
+            container._data['lst'][0]._data['ref']['name'],
+            'Aaron')
+
+        self.assertEqual(container.lst[0].ref.name, 'Aaron')
