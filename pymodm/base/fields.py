@@ -185,6 +185,8 @@ class MongoBaseField(object):
         self.attname = name
         self.mongo_name = self.mongo_name or name
         self.model = cls
+        if self.primary_key and not cls._mongometa.implicit_id:
+            self.required = True
         cls._mongometa.add_field(self)
         setattr(cls, name, self)
 
