@@ -148,8 +148,8 @@ class TopLevelMongoModelMetaclass(MongoModelMetaclass):
         # Check for a primary key field. If there isn't one, put one there.
         if new_class._mongometa.pk is None:
             id_field = ObjectIdField(primary_key=True)
-            new_class.add_to_class('_id', id_field)
             new_class._mongometa.implicit_id = True
+            new_class.add_to_class('_id', id_field)
 
         # Add QuerySet Manager.
         manager = new_class._find_manager()

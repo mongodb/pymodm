@@ -16,7 +16,7 @@ from test import ODMTestCase, DB
 from test.models import User
 
 from pymodm import MongoModel, CharField
-from pymodm.errors import InvalidModel
+from pymodm.errors import InvalidModel, ValidationError
 
 
 class BasicModelTestCase(ODMTestCase):
@@ -72,3 +72,19 @@ class BasicModelTestCase(ODMTestCase):
         with self.assertRaisesRegex(InvalidModel, msg):
             class SameMongoNameAsParent(Parent):
                 child_field = CharField()
+
+    def test_save_pk_field_required(self):
+        self.assertTrue(User.fname.required)
+
+        # This should raise ValidationError, since we explicitly defined
+        # `fname` as the primary_key, but it hasn't been given a value.
+        # `fname` should be required:
+        # ValidationError: {'fname': ['field is required.']}
+        with self.assertRaises(ValidationError) as cm:
+            User().save()
+
+        message = cm.exception.message
+        self.assertIsInstance(message, dict)
+        self.assertIn('fname', message)
+        self.assertIsInstance(message['fname'], list)
+        self.assertIn('field is required.', message['fname'])

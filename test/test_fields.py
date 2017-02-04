@@ -68,7 +68,7 @@ class FieldsTestCase(ODMTestCase):
 
     def test_field_dbname(self):
         self.assertEqual('firstName', Person.first_name.mongo_name)
-        Person(first_name='Han').save()
+        Person(email='han@site.com', first_name='Han').save()
         self.assertEqual(
             'Han',
             DB.person.find_one().get('firstName'))
@@ -96,18 +96,18 @@ class FieldsTestCase(ODMTestCase):
             retrieved)
 
     def test_model_validation(self):
-        person = Person(first_name='Luke', ssn='nan')
+        person = Person(email='luke@site.com', first_name='Luke', ssn='nan')
         with self.assertRaises(ValidationError):
             # SSN cannot be turned into an int.
             person.full_clean()
 
-        person = Person(first_name='Luke', ssn=42)
+        person = Person(email='luke@site.com', first_name='Luke', ssn=42)
         with self.assertRaises(ValidationError):
             # SSN is out of range.
             person.full_clean()
 
     def test_custom_validators(self):
-        person = Person(first_name='leia')
+        person = Person(email='leia@site.com', first_name='leia')
         with self.assertRaises(ValidationError):
             # Names have to be capitalized.
             person.full_clean()
@@ -125,14 +125,20 @@ class FieldsTestCase(ODMTestCase):
 
     def test_field_choices(self):
         # Ok.
-        Student(first_name='Joe', year='freshman').full_clean()
+        Student(
+            email='joe@site.com',
+            first_name='Joe',
+            year='freshman').full_clean()
         # Not a choice.
         with self.assertRaisesRegex(ValidationError, 'not a choice'):
             Student(year='sixth-year').full_clean()
 
     def test_field_choices_2d(self):
         # Ok.
-        Student2d(first_name='Bernard', year=Student2d.FRESHMAN).full_clean()
+        Student2d(
+            email='bernard@site.com',
+            first_name='Bernard',
+            year=Student2d.FRESHMAN).full_clean()
         # Not a choice.
         with self.assertRaisesRegex(ValidationError, 'not a choice'):
             Student2d(year='freshman').full_clean()
@@ -140,7 +146,8 @@ class FieldsTestCase(ODMTestCase):
     def test_required(self):
         # Positive cases tested in other tests.
         with self.assertRaisesRegex(ValidationError, 'field is required'):
-            Student2d(year=Student2d.FRESHMAN).full_clean()
+            Student2d(
+                email="bob@site.com", year=Student2d.FRESHMAN).full_clean()
 
     def test_set_empty(self):
         inst = Simple('a string with more than zero characters').save()
