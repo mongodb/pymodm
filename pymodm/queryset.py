@@ -60,7 +60,8 @@ class QuerySet(object):
             '_order_by', '_limit', '_skip', '_projection', '_return_raw',
             '_select_related_fields', '_collation')
 
-        clone = QuerySet(model=model or self._model, query=query or self._query)
+        clone = type(self)(model=model or self._model,
+                           query=query or self._query)
 
         for prop in clone_properties:
             setattr(clone, prop, copy.copy(getattr(self, prop)))
