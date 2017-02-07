@@ -86,8 +86,14 @@ class MongoOptions(object):
 
     def add_field(self, field_inst):
         """Add or replace a given Field."""
-        orig_field = (self.get_field(field_inst.mongo_name) or
-                      self.get_field_from_attname(field_inst.attname))
+        try:
+            orig_field = self.get_field(field_inst.mongo_name)
+        except Exception:
+            # FieldDoesNotExist, etc.
+            try:
+                orig_field = self.get_field_from_attname(field_inst.attname)
+            except Exception:
+                orig_field = None
         if orig_field:
             if field_inst.attname != orig_field.attname:
                 raise InvalidModel('%r cannot have the same mongo_name of '
