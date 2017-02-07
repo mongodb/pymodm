@@ -490,6 +490,34 @@ class QuerySet(object):
         return self._collection.update_many(
             self.raw_query, update, **kwargs).modified_count
 
+    def create_indexes(self):
+        """Create any indexes defined in model's Meta.
+
+        Note that this method can be used with context managers
+        from :mod:`~pymodm.context_managers`.
+
+        example::
+
+            from pymodm import MongoModel, CharField
+            from pymongo import IndexModel, ASCENDING
+
+            class User(MongoModel):
+                name = CharField()
+
+                class Meta:
+                    indexes = [
+                        IndexModel([('name', ASCENDING)])
+                    ]
+
+            def create_indexes():
+                # here we create indexes for each model
+                User.objects.create_indexes()
+
+        """
+        indexes = self._model._mongometa.indexes
+        if indexes:
+            self._model._mongometa.collection.create_indexes(indexes)
+
     #
     # Helper methods
     #
