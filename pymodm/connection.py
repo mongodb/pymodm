@@ -36,7 +36,7 @@ DEFAULT_CONNECTION_ALIAS = 'default'
 _CONNECTIONS = dict()
 
 
-def connect(mongodb_uri, alias=DEFAULT_CONNECTION_ALIAS):
+def connect(mongodb_uri, alias=DEFAULT_CONNECTION_ALIAS, **kwargs):
     """Register a connection to MongoDB, optionally providing a name for it.
 
     :parameters:
@@ -61,7 +61,7 @@ def connect(mongodb_uri, alias=DEFAULT_CONNECTION_ALIAS):
     _CONNECTIONS[alias] = ConnectionInfo(
         parsed_uri=parsed_uri,
         conn_string=mongodb_uri,
-        database=MongoClient(mongodb_uri)[parsed_uri['database']])
+        database=MongoClient(mongodb_uri, **kwargs)[parsed_uri['database']])
 
 
 def _get_connection(alias=DEFAULT_CONNECTION_ALIAS):
