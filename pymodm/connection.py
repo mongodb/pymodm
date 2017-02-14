@@ -52,6 +52,8 @@ def connect(mongodb_uri, alias=DEFAULT_CONNECTION_ALIAS, **kwargs):
         the :class:`~pymodm.context_managers.switch_connection` context
         manager.  Note that calling `connect()` multiple times with the same
         alias will replace any previous connections.
+      - `kwargs`: Additional keyword arguments to pass to the underlying
+        :class:`~pymongo.mongo_client.MongoClient`.
 
     """
     # Make sure the database is provided.
