@@ -68,8 +68,8 @@ and optionally some metadata, encapsulated in an inner class called
         last_name = fields.CharField()
 
         class Meta:
-            connection_alias = 'my-app'
             write_concern = WriteConcern(j=True)
+            connection_alias = 'my-app'
 
 Our model, ``User``, represents documents in the ``myDatabase.user`` collection
 in MongoDB. A few things to notice here:
@@ -81,13 +81,14 @@ in MongoDB. A few things to notice here:
   ``email``. CharField and EmailField always store their values as unicode
   strings. The ``email`` field will also validate its contents as an email
   address.
-- In the ``Meta`` class, we defined a couple pieces of metadata. The
-  ``connection_alias`` tells the model what connection to use by default. Here,
-  we're using the connection that we defined earlier, which we gave the name of
-  ``my-app``. Additionally, we defined the ``write_concern`` attribute, which
-  tells the Model what `write concern
-  <https://docs.mongodb.com/manual/reference/write-concern/>`_ to use by
-  default.
+- In the ``Meta`` class, we defined a couple pieces of metadata. First, we
+  defined the ``write_concern`` attribute, which tells the Model what `write
+  concern <https://docs.mongodb.com/manual/reference/write-concern/>`_ to use by
+  default. We also set the ``connection_alias``, which tells the model what
+  connection to use. In this case, we're using the connection that we defined
+  earlier, which we gave the name of ``my-app``. Note that we have to call
+  :func:`~pymodm.connection.connect` with the ``my-app`` alias before using this
+  model, since it relies on the ``my-app`` connection.
 - We set ``primary_key=True`` in the ``email`` field. This means that this field
   will be used as the id for documents of this MongoModel class. Note that this
   field will actually be called ``_id`` in the database.

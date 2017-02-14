@@ -405,6 +405,11 @@ class MongoModel(with_metaclass(TopLevelMongoModelMetaclass, MongoModelBase)):
         # Keyword arguments:
         roy = User(name='Roy', email='roy@roysemailaddress.net')
 
+    Note that :func:`~pymodm.connection.connect` has to be called (defining the
+    respective connection alias, if any) before any :class:`~pymodm.MongoModel`
+    can be used with that alias. If ``indexes`` is defined on ``Meta``, then
+    this has to be before the MongoModel class is evaluated.
+
     .. _metadata-attributes:
 
     The following metadata attributes are available:
@@ -415,9 +420,9 @@ class MongoModel(with_metaclass(TopLevelMongoModelMetaclass, MongoModelBase)):
       - `codec_options`: An instance of
         :class:`~bson.codec_options.CodecOptions` to use for reading and writing
         documents of this model type.
-      - `final`: Whether to restrict inheritance on this model. If ``True``, the 
+      - `final`: Whether to restrict inheritance on this model. If ``True``, the
         ``_cls`` field will not be stored in the document. ``False`` by
-        default. 
+        default.
       - `cascade`: If ``True``, save all :class:`~pymodm.MongoModel` instances
         this object references when :meth:`~pymodm.MongoModel.save` is called
         on this object.
