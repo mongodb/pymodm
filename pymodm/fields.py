@@ -1197,8 +1197,8 @@ class ReferenceField(RelatedModelFieldsBase):
                 raise ValidationError(
                     'Referenced Models must be saved to the database first.')
             return value._mongometa.pk.to_mongo(value.pk)
-        # Assume value is the _id.
-        return value
+        # Assume value is some form of the _id.
+        return self.related_model._mongometa.pk.to_mongo(value)
 
     def __get__(self, inst, owner):
         MongoModelBase = _import('pymodm.base.models.MongoModelBase')

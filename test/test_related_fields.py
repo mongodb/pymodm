@@ -187,3 +187,10 @@ class RelatedFieldsTestCase(ODMTestCase):
         post.refresh_from_db()
         self.assertEqual(
             post.images[0].photographer.thumbnail, photographer_thumbnail)
+
+    def test_coerce_reference_type(self):
+        post = Post('this is a post').save()
+        post_id = str(post.pk)
+        comment = Comment(body='this is a comment', post=post_id).save()
+        comment.refresh_from_db()
+        self.assertEqual('this is a post', comment.post.body)
