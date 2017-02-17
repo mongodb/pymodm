@@ -98,6 +98,13 @@ def _resolve_references(database, reference_map):
         documents = collection.find(query)
         for document in documents:
             document_map[document['_id']] = document
+
+        # if there are no documents for some _id from
+        # reference_map set it to None
+        for _id in reference_map[collection_name]:
+            if _id not in document_map:
+                document_map[_id] = None
+
     return document_map
 
 
