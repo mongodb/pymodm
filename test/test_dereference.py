@@ -204,3 +204,13 @@ class DereferenceTestCase(ODMTestCase):
             'Aaron')
 
         self.assertEqual(container.lst[0].ref.name, 'Aaron')
+
+    def test_dereference_reference_not_found(self):
+        post = Post(title='title').save()
+        comment = Comment(body='this is a comment', post=post).save()
+        post.delete()
+        self.assertEqual(Post.objects.count(), 0)
+        comment.refresh_from_db()
+        with no_auto_dereference(Comment):
+            dereference(comment)
+            self.assertIsNone(comment.post)
