@@ -1161,7 +1161,6 @@ class ReferenceField(RelatedModelFieldsBase):
                 'use MyModelClass.register_delete_rule instead.'
                 % model)
         self._on_delete = on_delete
-        self._is_instance = False
 
         def validate_related_model(ref):
             """Given a Model, verify that it's been saved first."""
@@ -1213,6 +1212,4 @@ class ReferenceField(RelatedModelFieldsBase):
         return self
 
     def __set__(self, inst, value):
-        MongoModel = _import('pymodm.base.models.MongoModel')
         super(ReferenceField, self).__set__(inst, value)
-        self._is_instance = isinstance(value, MongoModel)
