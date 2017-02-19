@@ -1,4 +1,5 @@
-from bson.objectid import ObjectId
+from collections import OrderedDict
+from bson import ObjectId, DBRef
 
 from pymodm.base import MongoModel, EmbeddedMongoModel
 from pymodm.context_managers import no_auto_dereference
@@ -162,8 +163,17 @@ class DereferenceTestCase(ODMTestCase):
             Card(CardIdentity(12, CardIdentity.SPADES)).save()
         ]
         hand = Hand(cards).save()
-        hand.refresh_from_db()
-        dereference(hand)
+
+        # check auto_dereferncing
+        # hand.refresh_from_db()
+        # self.assertIsInstance(hand.cards[0], Card)
+        # self.assertIsInstance(hand.cards[1], Card)
+
+        with no_auto_dereference(hand):
+            hand.refresh_from_db()
+            dereference(hand)
+            self.assertIsInstance(hand.cards[0], Card)
+            self.assertIsInstance(hand.cards[1], Card)
 
     def test_reference_not_found(self):
         post = Post(title='title').save()
@@ -205,12 +215,111 @@ class DereferenceTestCase(ODMTestCase):
 
         self.assertEqual(container.lst[0].ref.name, 'Aaron')
 
+    def test_embedded_reference_dereference(self):
+        # Test dereferencing items stored in a
+        # EmbeddedDocument(ReferenceField(X))
+        class OtherModel(MongoModel):
+            name = fields.CharField()
+
+        class OtherRefModel(EmbeddedMongoModel):
+            ref = fields.ReferenceField(OtherModel)
+
+        class Container(MongoModel):
+            emb = fields.EmbeddedDocumentField(OtherRefModel)
+
+        m1 = OtherModel('Aaron').save()
+
+        container = Container(emb=OtherRefModel(ref=m1))
+        container.save()
+
+        # Force ObjectIds.
+        with no_auto_dereference(container):
+            container.refresh_from_db()
+            self.assertIsInstance(container.emb.ref, ObjectId)
+            dereference(container)
+            self.assertIsInstance(container.emb.ref, OtherModel)
+            self.assertEqual(container.emb.ref.name, 'Aaron')
+
     def test_dereference_reference_not_found(self):
         post = Post(title='title').save()
         comment = Comment(body='this is a comment', post=post).save()
         post.delete()
         self.assertEqual(Post.objects.count(), 0)
         comment.refresh_from_db()
-        with no_auto_dereference(Comment):
+        with no_auto_dereference(comment):
             dereference(comment)
             self.assertIsNone(comment.post)
+
+    def test_dereference_models_with_same_id(self):
+        class User(MongoModel):
+            name = fields.CharField(primary_key=True)
+
+        class CommentWithUser(MongoModel):
+            body = fields.CharField()
+            post = fields.ReferenceField(Post)
+            user = fields.ReferenceField(User)
+
+        post = Post(title='Bob').save()
+        user = User(name='Bob').save()
+
+        comment = CommentWithUser(
+            body='this is a comment',
+            post=post,
+            user=user).save()
+
+        comment.refresh_from_db()
+        with no_auto_dereference(CommentWithUser):
+            dereference(comment)
+            self.assertIsInstance(comment.post, Post)
+            self.assertIsInstance(comment.user, User)
+
+    def test_dereference_dbrefs(self):
+        class User(MongoModel):
+            post = fields.DictField()
+            posts = fields.OrderedDictField()
+
+        post = Post(title='title1').save()
+        collection_name = Post._mongometa.collection_name
+
+        post_value = {
+            'dbref': DBRef(id=post.title, collection=collection_name)
+        }
+        posts_value = OrderedDict([('dbref', [post_value['dbref'], ])])
+
+        user = User(post=post_value, posts=posts_value).save()
+
+        user.refresh_from_db()
+        with no_auto_dereference(user):
+            dereference(user)
+            self.assertIsInstance(user.post['dbref'], dict)
+            self.assertEqual(user.post['dbref']['_id'], post.title)
+            self.assertIsInstance(user.posts['dbref'][0], dict)
+            self.assertEqual(user.posts['dbref'][0]['_id'], post.title)
+
+    def test_dereference_missed_reference_field(self):
+        comment = Comment(body='Body Comment').save()
+        with no_auto_dereference(comment):
+            comment.refresh_from_db()
+            dereference(comment)
+            self.assertIsNone(comment.post)
+
+    def test_dereference_dereferenced_reference(self):
+        class CommentContainer(MongoModel):
+            ref = fields.ReferenceField(Comment)
+
+        post = Post(title='title').save()
+        comment = Comment(body='Comment Body', post=post).save()
+
+        container = CommentContainer(ref=comment).save()
+
+        with no_auto_dereference(comment), no_auto_dereference(container):
+            comment.refresh_from_db()
+            container.refresh_from_db()
+            container.ref = comment
+            self.assertEqual(container.ref.post, 'title')
+            dereference(container)
+            self.assertIsInstance(container.ref.post, Post)
+            self.assertEqual(container.ref.post.title, 'title')
+            dereference(container)
+            self.assertIsInstance(container.ref.post, Post)
+            self.assertEqual(container.ref.post.title, 'title')

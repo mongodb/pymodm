@@ -19,7 +19,7 @@ from bson.dbref import DBRef
 from pymodm.base.models import MongoModelBase
 from pymodm.connection import _get_db
 from pymodm.context_managers import no_auto_dereference
-from pymodm.fields import ReferenceField
+from pymodm.fields import ReferenceField, ListField, EmbeddedDocumentListField
 
 
 class _ObjectMap(dict):
@@ -55,7 +55,8 @@ class _ObjectMap(dict):
 def _find_references_in_object(object, field, reference_map, fields=None):
     if isinstance(object, DBRef):
         reference_map[object.collection].append(object.id)
-    elif isinstance(field, ReferenceField) and not field._is_instance:
+    elif (isinstance(field, ReferenceField) and
+          not isinstance(object, field.related_model)):
         collection_name = field.related_model._mongometa.collection_name
         reference_map[collection_name].append(
             field.related_model._mongometa.pk.to_mongo(object))
@@ -66,6 +67,9 @@ def _find_references_in_object(object, field, reference_map, fields=None):
             _find_references_in_object(item, field, reference_map, fields)
     elif isinstance(object, MongoModelBase):
         _find_references(object, reference_map, fields)
+    elif hasattr(object, 'items'):
+        for key, value in object.items():
+            _find_references_in_object(value, None, reference_map, fields)
     # else:  doesn't matter...
 
 
@@ -91,19 +95,15 @@ def _find_references(model_instance, reference_map, fields=None):
 
 
 def _resolve_references(database, reference_map):
-    document_map = _ObjectMap()
+    document_map = {}
     for collection_name in reference_map:
+        document_map[collection_name] = _ObjectMap()
+
         collection = database[collection_name]
         query = {'_id': {'$in': reference_map[collection_name]}}
         documents = collection.find(query)
         for document in documents:
-            document_map[document['_id']] = document
-
-        # if there are no documents for some _id from
-        # reference_map set it to None
-        for _id in reference_map[collection_name]:
-            if _id not in document_map:
-                document_map[_id] = None
+            document_map[collection_name][document['_id']] = document
 
     return document_map
 
@@ -121,49 +121,87 @@ def _set_value(container, key, value):
         setattr(container, key, value)
 
 
-def _set_or_recurse(object, document_map, path, key, value):
-    if not path:
-        if isinstance(value, DBRef) and value.id in document_map:
-            _set_value(object, key, document_map[value.id])
-        # elif isinstance(value, ObjectId) and value in document_map:
-        elif value in document_map:
-            _set_value(object, key, document_map[value])
-        else:
-            # path is empty, but value could be a list.
-            _attach_objects_in_path(value, document_map, path)
+def _get_reference_document(document_map, collection_name, ref_id):
+    try:
+        return document_map[collection_name][ref_id]
+    except KeyError:
+        return None
+
+
+def _attach_objects_in_path(container, document_map, fields, key, field):
+    try:
+        value = _get_value(container, key)
+    except KeyError:
+        # there is no value for given key
+        return
+
+    if (isinstance(field, ReferenceField) and
+            not isinstance(value, field.related_model)):
+        # value is reference id
+        meta = field.related_model._mongometa
+        collection_name = meta.collection_name
+        ref_id = meta.pk.to_mongo(value)
+        doc = _get_reference_document(document_map,
+                                      collection_name, ref_id)
+        _set_value(container, key, doc)
+    elif isinstance(field, ListField):
+        # value is list
+        for idx, item in enumerate(value):
+            _attach_objects_in_path(value, document_map, fields,
+                                    idx, field._field)
+    elif isinstance(field, EmbeddedDocumentListField):
+        # value is list of embedded models instances
+        for emb_model_inst in value:
+            _attach_objects(emb_model_inst, document_map, fields)
+    elif isinstance(value, MongoModelBase):
+        # value is embedded model instance or reference is
+        # already dereferenced
+        _attach_objects(value, document_map, fields)
     else:
-        _attach_objects_in_path(value, document_map, path)
+        # attach dbrefs in container if any
+        _attach_dbrefs(container, document_map, key, value)
 
 
-def _attach_objects_in_path(container, document_map, path=None):
-    # Paths can't name indexes in a list, so just recurse on the list.
-    if isinstance(container, list):
-        for index, item in enumerate(container):
-            _set_or_recurse(container, document_map, path, index, item)
-    # Retrieve and recurse on the next field, if we have a path.
-    elif path:
-        part = path.popleft()
-        value = _get_value(container, part)
-        _set_or_recurse(container, document_map, path, part, value)
-    # Recurse on every field, if there's no path given.
-    elif hasattr(container, 'items') or isinstance(container, MongoModelBase):
-        # Container is a dict or a MongoModel of some kind.
-        # Both iterate their keys.
-        for key in container:
-            value = _get_value(container, key)
-            _set_or_recurse(container, document_map, path, key, value)
+def _attach_dbrefs(container, document_map, key, value):
+    if isinstance(value, DBRef):
+        # value is dbref
+        doc = _get_reference_document(document_map,
+                                      value.collection, value.id)
+        _set_value(container, key, doc)
+    elif isinstance(value, list):
+        for idx, item in enumerate(value):
+            _attach_dbrefs(value, document_map, idx, item)
+    elif hasattr(value, 'items'):
+        for key, item in value.items():
+            _attach_dbrefs(value, document_map, key, item)
 
 
-def _attach_objects(container, document_map, fields=None):
+def _attach_objects(model_instance, document_map, fields=None):
+    container = model_instance._data
+    field_names_map = {}
     if fields:
-        for field in fields:
-            _attach_objects_in_path(container, document_map, field)
-    else:
-        _attach_objects_in_path(container, document_map)
+        for idx, field in enumerate(fields):
+            if field:
+                field_names_map[idx] = field.popleft()
+        field_names = set(field_names_map.values())
+
+    for field in model_instance._mongometa.get_fields():
+        # Skip any fields we don't care about.
+        if fields and field.attname not in field_names:
+            continue
+
+        _attach_objects_in_path(container, document_map, fields,
+                                field.attname, field)
+
+    if fields:
+        # Restore parts of field names that we took off while scanning.
+        for field_idx, field_name in field_names_map.items():
+            fields[field_idx].appendleft(field_name)
 
 
 def dereference(model_instance, fields=None):
     """Dereference ReferenceFields on a MongoModel instance.
+
     This function is handy for dereferencing many fields at once and is more
     efficient than dereferencing one field at a time.
 
@@ -185,11 +223,12 @@ def dereference(model_instance, fields=None):
 
         db = _get_db(model_instance._mongometa.connection_alias)
         # Resolve all references, one collection at a time.
-        # This will give us a mapping of id --> resolved object.
+        # This will give us a mapping of
+        # {collection_name --> {id --> resolved object}}
         document_map = _resolve_references(db, reference_map)
 
         # Traverse the object and attach resolved references where needed.
-        _attach_objects(model_instance._data, document_map, fields)
+        _attach_objects(model_instance, document_map, fields)
 
     return model_instance
 
