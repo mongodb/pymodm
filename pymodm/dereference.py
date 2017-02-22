@@ -95,10 +95,8 @@ def _find_references(model_instance, reference_map, fields=None):
 
 
 def _resolve_references(database, reference_map):
-    document_map = {}
+    document_map = defaultdict(_ObjectMap)
     for collection_name in reference_map:
-        document_map[collection_name] = _ObjectMap()
-
         collection = database[collection_name]
         query = {'_id': {'$in': reference_map[collection_name]}}
         documents = collection.find(query)
