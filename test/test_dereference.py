@@ -1,5 +1,4 @@
-from collections import OrderedDict
-from bson import ObjectId, DBRef
+from bson import ObjectId
 
 from pymodm.base import MongoModel, EmbeddedMongoModel
 from pymodm.context_managers import no_auto_dereference
@@ -268,29 +267,6 @@ class DereferenceTestCase(ODMTestCase):
             dereference(comment)
             self.assertIsInstance(comment.post, Post)
             self.assertIsInstance(comment.user, User)
-
-    def test_dereference_dbrefs(self):
-        class User(MongoModel):
-            post = fields.DictField()
-            posts = fields.OrderedDictField()
-
-        post = Post(title='title1').save()
-        collection_name = Post._mongometa.collection_name
-
-        post_value = {
-            'dbref': DBRef(id=post.title, collection=collection_name)
-        }
-        posts_value = OrderedDict([('dbref', [post_value['dbref'], ])])
-
-        user = User(post=post_value, posts=posts_value).save()
-
-        user.refresh_from_db()
-        with no_auto_dereference(user):
-            dereference(user)
-            self.assertIsInstance(user.post['dbref'], dict)
-            self.assertEqual(user.post['dbref']['_id'], post.title)
-            self.assertIsInstance(user.posts['dbref'][0], dict)
-            self.assertEqual(user.posts['dbref'][0]['_id'], post.title)
 
     def test_dereference_missed_reference_field(self):
         comment = Comment(body='Body Comment').save()
