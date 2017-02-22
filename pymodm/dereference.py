@@ -99,19 +99,6 @@ def _resolve_references(database, reference_map):
     return document_map
 
 
-def _get_value(container, key):
-    if hasattr(container, '__getitem__'):
-        return container[key]
-    return getattr(container, key)
-
-
-def _set_value(container, key, value):
-    if hasattr(container, '__setitem__'):
-        container[key] = value
-    else:
-        setattr(container, key, value)
-
-
 def _get_reference_document(document_map, collection_name, ref_id):
     try:
         return document_map[collection_name][ref_id]
@@ -121,7 +108,7 @@ def _get_reference_document(document_map, collection_name, ref_id):
 
 def _attach_objects_in_path(container, document_map, fields, key, field):
     try:
-        value = _get_value(container, key)
+        value = container[key]
     except KeyError:
         # there is no value for given key
         return
@@ -130,11 +117,9 @@ def _attach_objects_in_path(container, document_map, fields, key, field):
             not isinstance(value, field.related_model)):
         # value is reference id
         meta = field.related_model._mongometa
-        collection_name = meta.collection_name
-        ref_id = meta.pk.to_mongo(value)
-        doc = _get_reference_document(document_map,
-                                      collection_name, ref_id)
-        _set_value(container, key, doc)
+        container[key] = _get_reference_document(document_map,
+                                                 meta.collection_name,
+                                                 meta.pk.to_mongo(value))
     elif isinstance(field, ListField):
         # value is list
         for idx, item in enumerate(value):
