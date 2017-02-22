@@ -140,7 +140,7 @@ class DereferenceTestCase(ODMTestCase):
             wrapper_list.wrapper[0].comments[0].post.title
         )
 
-    def test_unhashable_id(self):
+    def _test_unhashable_id(self, final_value=True):
         # Test that we can reference a model whose id type is unhashable
         # e.g. a dict, list, etc.
         class CardIdentity(EmbeddedMongoModel):
@@ -149,6 +149,9 @@ class DereferenceTestCase(ODMTestCase):
             rank = fields.IntegerField(min_value=0, max_value=12)
             suit = fields.IntegerField(
                 choices=(HEARTS, DIAMONDS, SPADES, CLUBS))
+
+            class Meta:
+                final = final_value
 
         class Card(MongoModel):
             id = fields.EmbeddedDocumentField(CardIdentity, primary_key=True)
@@ -163,11 +166,26 @@ class DereferenceTestCase(ODMTestCase):
         ]
         hand = Hand(cards).save()
 
+        # test auto dereferencing
+        hand.refresh_from_db()
+        self.assertIsInstance(hand.cards[0], Card)
+        self.assertEqual(hand.cards[0].id.rank, 4)
+        self.assertIsInstance(hand.cards[1], Card)
+        self.assertEqual(hand.cards[1].id.rank, 12)
+
         with no_auto_dereference(hand):
             hand.refresh_from_db()
             dereference(hand)
             self.assertIsInstance(hand.cards[0], Card)
+            self.assertEqual(hand.cards[0].id.rank, 4)
             self.assertIsInstance(hand.cards[1], Card)
+            self.assertEqual(hand.cards[1].id.rank, 12)
+
+    def test_unhashable_id_final_true(self):
+        self._test_unhashable_id(final_value=True)
+
+    def test_unhashable_id_final_false(self):
+        self._test_unhashable_id(final_value=False)
 
     def test_reference_not_found(self):
         post = Post(title='title').save()

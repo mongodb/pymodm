@@ -199,7 +199,7 @@ def dereference_id(model_class, model_id):
       - `model_class`: The class of a model to be dereferenced.
       - `model_id`: The id of the model to be dereferenced.
     """
-    collection = model_class._mongometa.collection
-    document = collection.find_one(model_id)
+    meta = model_class._mongometa
+    document = meta.collection.find_one({'_id': meta.pk.to_mongo(model_id)})
     if document:
         return model_class.from_document(document)
