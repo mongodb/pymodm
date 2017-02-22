@@ -14,8 +14,6 @@
 
 from collections import defaultdict, deque
 
-from bson.dbref import DBRef
-
 from pymodm.base.models import MongoModelBase
 from pymodm.connection import _get_db
 from pymodm.context_managers import no_auto_dereference
@@ -53,10 +51,8 @@ class _ObjectMap(dict):
 
 
 def _find_references_in_object(object, field, reference_map, fields=None):
-    if isinstance(object, DBRef):
-        reference_map[object.collection].append(object.id)
-    elif (isinstance(field, ReferenceField) and
-          not isinstance(object, field.related_model)):
+    if (isinstance(field, ReferenceField) and
+            not isinstance(object, field.related_model)):
         collection_name = field.related_model._mongometa.collection_name
         reference_map[collection_name].append(
             field.related_model._mongometa.pk.to_mongo(object))
@@ -67,9 +63,6 @@ def _find_references_in_object(object, field, reference_map, fields=None):
             _find_references_in_object(item, field, reference_map, fields)
     elif isinstance(object, MongoModelBase):
         _find_references(object, reference_map, fields)
-    elif hasattr(object, 'items'):
-        for key, value in object.items():
-            _find_references_in_object(value, None, reference_map, fields)
     # else:  doesn't matter...
 
 
@@ -155,23 +148,6 @@ def _attach_objects_in_path(container, document_map, fields, key, field):
         # value is embedded model instance or reference is
         # already dereferenced
         _attach_objects(value, document_map, fields)
-    else:
-        # attach dbrefs in container if any
-        _attach_dbrefs(container, document_map, key, value)
-
-
-def _attach_dbrefs(container, document_map, key, value):
-    if isinstance(value, DBRef):
-        # value is dbref
-        doc = _get_reference_document(document_map,
-                                      value.collection, value.id)
-        _set_value(container, key, doc)
-    elif isinstance(value, list):
-        for idx, item in enumerate(value):
-            _attach_dbrefs(value, document_map, idx, item)
-    elif hasattr(value, 'items'):
-        for key, item in value.items():
-            _attach_dbrefs(value, document_map, key, item)
 
 
 def _attach_objects(model_instance, document_map, fields=None):
