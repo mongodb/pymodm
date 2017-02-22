@@ -164,11 +164,6 @@ class DereferenceTestCase(ODMTestCase):
         ]
         hand = Hand(cards).save()
 
-        # check auto_dereferncing
-        # hand.refresh_from_db()
-        # self.assertIsInstance(hand.cards[0], Card)
-        # self.assertIsInstance(hand.cards[1], Card)
-
         with no_auto_dereference(hand):
             hand.refresh_from_db()
             dereference(hand)
@@ -247,6 +242,7 @@ class DereferenceTestCase(ODMTestCase):
         self.assertEqual(Post.objects.count(), 0)
         comment.refresh_from_db()
         with no_auto_dereference(comment):
+            self.assertEqual(comment.post, 'title')
             dereference(comment)
             self.assertIsNone(comment.post)
 
