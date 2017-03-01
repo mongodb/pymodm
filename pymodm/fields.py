@@ -1062,27 +1062,8 @@ class EmbeddedDocumentField(RelatedModelFieldsBase):
             return self.related_model.from_document(value)
         return value
 
-    @staticmethod
-    def _value_to_mongo(related_model, value):
-        if isinstance(value, bson.SON):
-            return value
-
-        if isinstance(value, related_model):
-            return value.to_son()
-
-        # if value is a dict convert in to model
-        # so we can properly generate SON
-        if isinstance(value, dict):
-            return related_model.from_document(value).to_son()
-
-        # TODO: Should we raise a ValidationError as we could not
-        # convert value to SON?
-        return value
-
-
     def to_mongo(self, value):
-        return EmbeddedDocumentField._value_to_mongo(self.related_model,
-                                                     value)
+        return self._model_to_document(value)
 
 
 class EmbeddedDocumentListField(RelatedModelFieldsBase):
@@ -1125,8 +1106,7 @@ class EmbeddedDocumentListField(RelatedModelFieldsBase):
                 for item in value]
 
     def to_mongo(self, value):
-        return [EmbeddedDocumentField._value_to_mongo(self.related_model, doc)
-                for doc in value]
+        return [self._model_to_document(doc) for doc in value]
 
 
 class ReferenceField(RelatedModelFieldsBase):
@@ -1199,24 +1179,22 @@ class ReferenceField(RelatedModelFieldsBase):
                                                     self._on_delete)
 
     def to_python(self, value):
-        doc = value
         if isinstance(value, dict):
             # Try to convert the value into our document type.
             try:
-                doc = self.related_model.from_document(value)
-            except Exception:
+                return self.related_model.from_document(value)
+            except (ValueError, TypeError):
                 pass
 
-        if isinstance(doc, self.related_model):
-            return doc
-        elif self.model._mongometa._auto_dereference:
+        if isinstance(value, self.related_model):
+            return value
+
+        if self.model._mongometa._auto_dereference:
             # Attempt to dereference the value as an id.
             dereference_id = _import('pymodm.dereference.dereference_id')
             return dereference_id(self.related_model, value)
 
-        # TODO: should we convert value to mongo here?
-        # return self.related_model._mongometa.pk.to_mongo(value)
-        return value
+        return self.related_model._mongometa.pk.to_python(value)
 
     def to_mongo(self, value):
         if isinstance(value, self.related_model):
@@ -1238,6 +1216,3 @@ class ReferenceField(RelatedModelFieldsBase):
             self.__set__(inst, python)
             return python
         return self
-
-    def __set__(self, inst, value):
-        super(ReferenceField, self).__set__(inst, value)

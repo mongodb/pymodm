@@ -57,7 +57,7 @@ class RelatedFieldsTestCase(ODMTestCase):
 
     def test_assign_id_to_reference_field(self):
         # No ValidationError raised.
-        Comment(post=1234).full_clean()
+        Comment(post="58b477046e32ab215dca2b57").full_clean()
 
     def test_validate_embedded_document(self):
         with self.assertRaisesRegex(ValidationError, 'field is required'):
