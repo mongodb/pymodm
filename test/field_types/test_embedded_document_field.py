@@ -14,6 +14,7 @@
 from bson import SON
 
 from pymodm import EmbeddedMongoModel
+from pymodm.errors import ValidationError
 from pymodm.fields import EmbeddedDocumentField, CharField
 
 from test.field_types import FieldTestCase
@@ -54,3 +55,9 @@ class EmbeddedDocumentFieldTestCase(FieldTestCase):
 
         self.assertIsInstance(value, SON)
         self.assertEqual(value, SON({'name': 'Bob'}))
+
+    def test_to_mongo_wrong_model(self):
+        with self.assertRaises(ValidationError) as cm:
+            self.field.to_mongo(1234)
+        exc = cm.exception
+        self.assertEqual(exc.message, '1234 is not a valid EmbeddedDocument')

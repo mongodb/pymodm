@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import bson
 
 from pymodm import validators
 from pymodm.common import (
@@ -219,6 +220,23 @@ class RelatedModelFieldsBase(MongoBaseField):
                   issubclass(self.__model, MongoModelBase)):
                 self.__related_model = self.__model
         return self.__related_model
+
+    def _model_to_document(self, value):
+        if isinstance(value, bson.SON):
+            # value has been already converted
+            return value
+
+        if isinstance(value, self.related_model):
+            return value.to_son()
+
+        if isinstance(value, dict):
+            # if value is a dict convert in to model
+            # so we can properly generate SON
+            return self.related_model.from_document(value).to_son()
+
+        # we could not convert value to SON
+        raise ValidationError(
+            '%s is not a valid %s' % (value, self.related_model.__name__))
 
 
 class GeoJSONField(MongoBaseField):
