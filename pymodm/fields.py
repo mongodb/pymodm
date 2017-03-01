@@ -1161,14 +1161,7 @@ class ReferenceField(RelatedModelFieldsBase):
                 'use MyModelClass.register_delete_rule instead.'
                 % model)
         self._on_delete = on_delete
-
-        def validate_related_model(ref):
-            """Given a Model, verify that it's been saved first."""
-            if isinstance(ref, self.related_model) and not ref.pk:
-                raise ValidationError(
-                    'Referenced documents must be saved to the database first.')
-
-        self.validators.append(validate_related_model)
+        self.validators.append(validators.validator_for_func(self.to_mongo))
 
     def contribute_to_class(self, cls, name):
         super(ReferenceField, self).contribute_to_class(cls, name)
