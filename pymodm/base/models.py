@@ -262,11 +262,16 @@ class MongoModelBase(object):
 
         """
         dct = validate_mapping('document', document)
+        doc_cls = cls
         cls_name = dct.get('_cls')
         if cls_name is not None:
-            cls = get_document(cls_name)
+            doc_cls = get_document(cls_name)
+            if not issubclass(doc_cls, cls):
+                raise TypeError('A document\'s _cls field must be '
+                                'a subclass of the %s, but %s is not.'
+                                % (doc_cls, cls))
 
-        inst = cls()
+        inst = doc_cls()
         inst._set_attributes(dct)
         return inst
 
