@@ -85,7 +85,7 @@ class RelatedFieldsTestCase(ODMTestCase):
         message = cm.exception.message
         self.assertIn('post', message)
         self.assertEqual(
-            ['Referenced documents must be saved to the database first.'],
+            ['Referenced Models must be saved to the database first.'],
             message['post'])
 
         # Cannot save document when reference is unresolved.
@@ -93,7 +93,7 @@ class RelatedFieldsTestCase(ODMTestCase):
             comment.save()
         self.assertIn('post', message)
         self.assertEqual(
-            ['Referenced documents must be saved to the database first.'],
+            ['Referenced Models must be saved to the database first.'],
             message['post'])
 
     def test_embedded_document(self):
