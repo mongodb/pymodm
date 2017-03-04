@@ -80,6 +80,29 @@ class FieldsTestCase(ODMTestCase):
                 renamed_pk = fields.CharField(mongo_name='foo',
                                               primary_key=True)
 
+    def test_non_primary_key_named_id(self):
+        msg = '"_id" is reserved as the mongo_name of the primary key.'
+        with self.assertRaisesRegex(ValueError, msg):
+            class NonPrimaryKeyNamedId(MongoModel):
+                not_primary_key = fields.CharField(mongo_name='_id')
+        with self.assertRaisesRegex(ValueError, msg):
+            class NonPrimaryKeyNamedIdImplicitly(MongoModel):
+                _id = fields.CharField()
+
+    def test_validate_mongo_name(self):
+        invalid_mongo_names = ['$dollar', 'has.dot', 'null\x00character']
+        for invalid_mongo_name in invalid_mongo_names:
+            with self.assertRaisesRegex(ValueError, 'mongo_name cannot .*'):
+                class InvalidMongoName(MongoModel):
+                    field = fields.CharField(mongo_name=invalid_mongo_name)
+        valid_mongo_names = ['', 'dollar$', 'foo']
+        for valid_mongo_name in valid_mongo_names:
+            class ValidMongoName(MongoModel):
+                field = fields.CharField(mongo_name=valid_mongo_name)
+            self.assertEqual(ValidMongoName.field.mongo_name,
+                             valid_mongo_name)
+            self.assertEqual(ValidMongoName.field.attname, 'field')
+
     def test_pk_alias(self):
         Person('han.solo+wookie@milleniumfalcon.net', 'Han', 'Solo').save()
         retrieved = DB.person.find_one()

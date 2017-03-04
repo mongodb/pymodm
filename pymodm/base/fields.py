@@ -16,7 +16,8 @@ import bson
 from pymodm import validators
 from pymodm.common import (
     _import, get_document,
-    validate_string_or_none, validate_boolean, validate_list_tuple_or_none)
+    validate_string_or_none, validate_boolean, validate_list_tuple_or_none,
+    validate_mongo_field_name_or_none)
 from pymodm.compat import string_types
 from pymodm.errors import ValidationError
 
@@ -51,8 +52,8 @@ class MongoBaseField(object):
         """
         self._verbose_name = validate_string_or_none(
             'verbose_name', verbose_name)
-        self.mongo_name = validate_string_or_none('mongo_name', mongo_name)
         self.primary_key = validate_boolean('primary_key', primary_key)
+        self.mongo_name = self._validate_mongo_name(mongo_name)
         self.blank = validate_boolean('blank', blank)
         self.required = validate_boolean('required', required)
         self.choices = validate_list_tuple_or_none('choices', choices)
@@ -61,14 +62,20 @@ class MongoBaseField(object):
         self.default = default
         # "attname" is the attribute name of this field on the Model.
         # We may be assigned a different name by the Model's metaclass later on.
-        self.attname = mongo_name
-        if self.primary_key and self.mongo_name not in (None, '_id'):
-            raise ValueError(
-                'The mongo_name of a primary key must be "_id".')
-        elif self.primary_key:
-            self.mongo_name = '_id'
+        self.attname = self.mongo_name
         self.__counter = MongoBaseField.__creation_counter
         MongoBaseField.__creation_counter += 1
+
+    def _validate_mongo_name(self, mongo_name):
+        if not self.primary_key and mongo_name == '_id':
+            raise ValueError(
+                '"_id" is reserved as the mongo_name of the primary key.')
+        if self.primary_key:
+            if mongo_name not in (None, '_id'):
+                raise ValueError(
+                    'The mongo_name of a primary key must be "_id".')
+            return '_id'
+        return validate_mongo_field_name_or_none('mongo_name', mongo_name)
 
     def __get__(self, inst, owner):
         MongoModelBase = _import('pymodm.base.models.MongoModelBase')
@@ -184,7 +191,9 @@ class MongoBaseField(object):
     def contribute_to_class(self, cls, name):
         """Callback executed when adding this Field to a Model."""
         self.attname = name
-        self.mongo_name = self.mongo_name or name
+        # The empty string is a valid MongoDB field name.
+        if self.mongo_name is None:
+            self.mongo_name = self._validate_mongo_name(name)
         self.model = cls
         if self.primary_key and not cls._mongometa.implicit_id:
             self.required = True
