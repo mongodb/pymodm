@@ -88,6 +88,27 @@ def validate_string_or_none(option, value):
     return validate_string(option, value)
 
 
+def validate_mongo_field_name_or_none(option, value):
+    """Validates the MongoDB field name format described in:
+    https://docs.mongodb.com/manual/core/document/#field-names
+    """
+    if value is None:
+        return value
+    validate_string(option, value)
+    if value == '':
+        return value
+    if value[0] == '$':
+        raise ValueError('%s cannot start with the dollar sign ($) '
+                         'character, %r.' % (option, value))
+    if '.' in value:
+        raise ValueError('%s cannot contain the dot (.) character, %r.'
+                         % (option, value))
+    if '\x00' in value:
+        raise ValueError('%s cannot contain the null character, %r.'
+                         % (option, value))
+    return value
+
+
 def validate_boolean(option, value):
     if not isinstance(value, bool):
         raise TypeError('%s must be a boolean, not a %s'
