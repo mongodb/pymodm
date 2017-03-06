@@ -66,10 +66,12 @@ class MongoBaseField(object):
         self.__counter = MongoBaseField.__creation_counter
         MongoBaseField.__creation_counter += 1
 
-    def _validate_mongo_name(self, mongo_name):
+    def _validate_mongo_name(self, mongo_name, attname=None):
         if not self.primary_key and mongo_name == '_id':
+            field_msg = ' of field %s' % (attname,) if attname else ''
             raise ValueError(
-                '"_id" is reserved as the mongo_name of the primary key.')
+                'mongo_name%s is "_id", but primary_key is False.'
+                % (field_msg,))
         if self.primary_key:
             if mongo_name not in (None, '_id'):
                 raise ValueError(
@@ -193,7 +195,7 @@ class MongoBaseField(object):
         self.attname = name
         # The empty string is a valid MongoDB field name.
         if self.mongo_name is None:
-            self.mongo_name = self._validate_mongo_name(name)
+            self.mongo_name = self._validate_mongo_name(name, attname=name)
         self.model = cls
         if self.primary_key and not cls._mongometa.implicit_id:
             self.required = True

@@ -81,10 +81,11 @@ class FieldsTestCase(ODMTestCase):
                                               primary_key=True)
 
     def test_non_primary_key_named_id(self):
-        msg = '"_id" is reserved as the mongo_name of the primary key.'
+        msg = 'mongo_name is "_id", but primary_key is False.'
         with self.assertRaisesRegex(ValueError, msg):
             class NonPrimaryKeyNamedId(MongoModel):
                 not_primary_key = fields.CharField(mongo_name='_id')
+        msg = 'mongo_name of field _id is "_id", but primary_key is False.'
         with self.assertRaisesRegex(ValueError, msg):
             class NonPrimaryKeyNamedIdImplicitly(MongoModel):
                 _id = fields.CharField()
