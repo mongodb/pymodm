@@ -89,7 +89,7 @@ class MongoOptions(object):
         try:
             orig_field = self.get_field(field_inst.mongo_name)
         except Exception:
-            # FieldDoesNotExist, etc.
+            # FieldDoesNotExist, etc. may be raised by subclasses.
             try:
                 orig_field = self.get_field_from_attname(field_inst.attname)
             except Exception:
