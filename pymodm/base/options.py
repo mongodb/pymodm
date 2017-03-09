@@ -90,10 +90,13 @@ class MongoOptions(object):
             orig_field = self.get_field(field_inst.mongo_name)
         except Exception:
             # FieldDoesNotExist, etc. may be raised by subclasses.
+            orig_field = None
+        if orig_field is None:
             try:
                 orig_field = self.get_field_from_attname(field_inst.attname)
             except Exception:
-                orig_field = None
+                pass
+
         if orig_field:
             if field_inst.attname != orig_field.attname:
                 raise InvalidModel('%r cannot have the same mongo_name of '
