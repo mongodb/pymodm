@@ -82,3 +82,8 @@ class MongoOptionsTestCase(ODMTestCase):
         # Replace a Field.
         options.add_field(fields.ObjectIdField(mongo_name='id'))
         self.assertIsInstance(options.get_fields()[-1], fields.ObjectIdField)
+        # Replace a field with a different mongo_name, but same attname.
+        new_field = fields.ObjectIdField(mongo_name='newid')
+        new_field.attname = 'id'
+        options.add_field(new_field)
+        self.assertEqual(len(options.get_fields()), 2)
