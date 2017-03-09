@@ -160,7 +160,7 @@ class TopLevelMongoModelMetaclass(MongoModelMetaclass):
 
         # Create any indexes defined in our options.
         indexes = new_class._mongometa.indexes
-        if indexes:
+        if indexes and new_class._mongometa.auto_create_indexes:
             new_class._mongometa.collection.create_indexes(indexes)
 
         return new_class
@@ -439,7 +439,9 @@ class MongoModel(with_metaclass(TopLevelMongoModelMetaclass, MongoModelBase)):
         for write operations.
       - `indexes`: This is a list of :class:`~pymongo.operations.IndexModel`
         instances that describe the indexes that should be created for this
-        model. Indexes are created when the class definition is evaluated.
+        model.
+      - `auto_create_indexes`: If ``True``, indexes will be created when the
+        class definition is evaluated. ``True`` by default.
 
     .. note:: Creating an instance of MongoModel does not create a document in
               the database.

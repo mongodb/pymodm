@@ -24,7 +24,7 @@ from pymodm.fields import EmbeddedDocumentField, EmbeddedDocumentListField
 DEFAULT_NAMES = (
     'connection_alias', 'collection_name', 'codec_options', 'final',
     'cascade', 'read_preference', 'read_concern', 'write_concern',
-    'indexes', 'collation')
+    'indexes', 'collation', 'auto_create_indexes')
 
 
 class MongoOptions(object):
@@ -51,6 +51,7 @@ class MongoOptions(object):
         self.write_concern = None
         self.indexes = []
         self.collation = None
+        self.auto_create_indexes = True
         self._auto_dereference = True
 
     @property
