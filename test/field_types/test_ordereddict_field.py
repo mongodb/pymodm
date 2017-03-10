@@ -52,3 +52,6 @@ class OrderedDictFieldTestCase(FieldTestCase):
 
     def test_get_default(self):
         self.assertEqual(OrderedDict(), self.field.get_default())
+
+    def test_blank(self):
+        self.assertTrue(self.field.is_blank(OrderedDict()))

@@ -725,6 +725,9 @@ class DictField(MongoBaseField):
 
 class OrderedDictField(DictField):
     """A field that stores a :class:`~collections.OrderedDict`."""
+
+    empty_values = MongoBaseField.empty_values + [OrderedDict()]
+
     def __init__(self, verbose_name=None, mongo_name=None, **kwargs):
         """
         :parameters:
