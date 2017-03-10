@@ -11,17 +11,18 @@ number of new features, including:
 * Change default values for DictField, OrderedDictField, ListField, and
   EmbeddedDocumentListField to be the empty value for their respective
   containers instead of None.
-* Add :data:`pymodm.base.options.MongoOptions.ignore_unknown_fields` method
-  to allow unknown fields when parsing documents into model. Note that with
-  this option enabled, calling :meth:`~pymodm.MongoModel.save` will erase
-  these fields for that model instance.
+* Add the `ignore_unknown_fields`
+  :ref:`metadata attribute <metadata-attributes>` which allows unknown
+  fields when parsing documents into a :class:`~pymodm.MongoModel`.
+  Note that with this option enabled, calling :meth:`~pymodm.MongoModel.save`
+  will erase these fields for that model instance.
 * Add :meth:`pymodm.queryset.QuerySet.reverse`.
-* Stricter validation of MongoDB field names in
-  :class:`~pymodm.fields.DictField` and
-  :class:`~pymodm.fields.OrderedDictField`.
-* Properly check that :attr:`pymodm.base.fields.MongoBaseField.mongo_name`
+* Properly check that the `mongo_name` parameter to
+  :class:`~pymodm.base.fields.MongoBaseField`
   and all keys in :class:`~pymodm.fields.DictField` and
   :class:`~pymodm.fields.OrderedDictField` are valid MongoDB field names.
+* Fix multiple issues in dereferencing fields thanks to
+  https://github.com/ilex.
 
 
 For full list of the issues resolved in this release, visit
