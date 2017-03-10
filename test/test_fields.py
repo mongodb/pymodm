@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
 import re
 
 import bson
@@ -234,3 +235,27 @@ class FieldsTestCase(ODMTestCase):
         self.assertEqual('Harold', inst.name)
         del inst.name
         self.assertEqual('Bozo', inst.name)
+
+    def test_callable_default(self):
+        now = datetime.datetime.now()
+
+        class CallableDefault(MongoModel):
+            date = fields.DateTimeField(default=lambda: now)
+
+        inst = CallableDefault()
+        self.assertEqual(now, inst.date)
+        earlier = datetime.datetime(year=1999, month=10, day=4)
+        inst.date = earlier
+        self.assertEqual(earlier, inst.date)
+        del inst.date
+        self.assertEqual(now, inst.date)
+
+        inst = CallableDefault().save()
+        self.assertEqual(now, inst.date)
+
+        # Default that is an empty value.
+        class CallableEmptyValue(MongoModel):
+            list_of_things = fields.ListField()
+
+        inst = CallableEmptyValue().save()
+        self.assertNotIn('list_of_things', DB.callable_empty_value.find_one())

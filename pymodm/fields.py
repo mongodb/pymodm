@@ -695,6 +695,7 @@ class DictField(MongoBaseField):
         .. seealso:: constructor for
                      :class:`~pymodm.base.fields.MongoBaseField`
         """
+        kwargs.setdefault('default', dict)
         super(DictField, self).__init__(verbose_name=verbose_name,
                                         mongo_name=mongo_name,
                                         **kwargs)
@@ -724,6 +725,9 @@ class DictField(MongoBaseField):
 
 class OrderedDictField(DictField):
     """A field that stores a :class:`~collections.OrderedDict`."""
+
+    empty_values = MongoBaseField.empty_values + [OrderedDict()]
+
     def __init__(self, verbose_name=None, mongo_name=None, **kwargs):
         """
         :parameters:
@@ -733,6 +737,7 @@ class OrderedDictField(DictField):
         .. seealso:: constructor for
                      :class:`~pymodm.base.fields.MongoBaseField`
         """
+        kwargs.setdefault('default', OrderedDict)
         super(OrderedDictField, self).__init__(verbose_name=verbose_name,
                                                mongo_name=mongo_name,
                                                **kwargs)
@@ -766,6 +771,7 @@ class ListField(MongoBaseField):
         .. seealso:: constructor for
                      :class:`~pymodm.base.fields.MongoBaseField`
         """
+        kwargs.setdefault('default', list)
         super(ListField, self).__init__(verbose_name=verbose_name,
                                         mongo_name=mongo_name,
                                         **kwargs)
@@ -1078,6 +1084,7 @@ class EmbeddedDocumentListField(RelatedModelFieldsBase):
         .. seealso:: constructor for
                      :class:`~pymodm.base.fields.MongoBaseField`
         """
+        kwargs.setdefault('default', list)
         super(EmbeddedDocumentListField, self).__init__(
             model=model,
             verbose_name=verbose_name,

@@ -233,10 +233,10 @@ class QuerySetTestCase(ODMTestCase):
 
         with no_auto_dereference(Post):
             posts = list(Post.objects.all())
-            self.assertIsNone(posts[0].comments)
+            self.assertEqual([], posts[0].comments)
             self.assertIsInstance(posts[1].comments[0], ObjectId)
             self.assertIsInstance(posts[1].comments[1], ObjectId)
 
             posts = list(Post.objects.select_related())
-            self.assertIsNone(posts[0].comments)
+            self.assertEqual([], posts[0].comments)
             self.assertEqual(posts[1].comments, comments)
