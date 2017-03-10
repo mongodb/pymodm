@@ -232,7 +232,7 @@ class QuerySet(object):
     def reverse(self):
         """Reverse the ordering for this QuerySet.
 
-        If :meth:`~pymodm.queryset.QuerySet.order_by has not been called,
+        If :meth:`~pymodm.queryset.QuerySet.order_by` has not been called,
         reverse() has no effect.
         """
         clone = self._clone()
