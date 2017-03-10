@@ -49,3 +49,6 @@ class OrderedDictFieldTestCase(FieldTestCase):
         for valid_mongo_name in VALID_MONGO_NAMES:
             self.field.validate({valid_mongo_name: 42})
             self.field.validate({valid_mongo_name: [{valid_mongo_name: 42}]})
+
+    def test_get_default(self):
+        self.assertEqual(OrderedDict(), self.field.get_default())

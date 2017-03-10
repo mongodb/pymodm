@@ -43,7 +43,8 @@ class MongoBaseField(object):
           - `blank`: If ``True``, allow this field to have an empty value.
           - `required`: If ``True``, do not allow this field to be unspecified.
           - `default`: The default value to use for this field if no other value
-            has been given.
+            has been given. If ``default`` is callable, then the return value of
+            ``default()`` will be used as the default value.
           - `choices`: A list of possible values for the field. This can be a
             flat list, or a list of 2-tuples consisting of an allowed field
             value and a human-readable version of that value.
@@ -82,7 +83,7 @@ class MongoBaseField(object):
     def __get__(self, inst, owner):
         MongoModelBase = _import('pymodm.base.models.MongoModelBase')
         if inst is not None and isinstance(inst, MongoModelBase):
-            raw_value = inst._data.get(self.attname, self.default)
+            raw_value = inst._data.get(self.attname, self.get_default())
             if self.is_blank(raw_value):
                 return raw_value
             # Cache pythonized value.
@@ -97,6 +98,9 @@ class MongoBaseField(object):
 
     def __delete__(self, inst):
         inst._data.pop(self.attname, None)
+
+    def get_default(self):
+        return self.default() if callable(self.default) else self.default
 
     def is_blank(self, value):
         """Determine if the value is blank."""

@@ -76,3 +76,6 @@ class EmbeddedDocumentFieldTestCase(FieldTestCase):
         self.assertEqual(value[0], SON({'name': 'Bob'}))
         self.assertIsInstance(value[1], SON)
         self.assertEqual(value[1], SON({'name': 'Alice'}))
+
+    def test_get_default(self):
+        self.assertEqual([], self.field.get_default())
