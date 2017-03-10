@@ -35,6 +35,10 @@ server_info = pymongo.MongoClient(MONGO_URI).server_info()
 MONGO_VERSION = tuple(server_info.get('versionArray', []))
 
 
+INVALID_MONGO_NAMES = ['$dollar', 'has.dot', 'null\x00character']
+VALID_MONGO_NAMES = ['', 'dollar$', 'forty-two']
+
+
 class ODMTestCase(unittest.TestCase):
 
     def tearDown(self):

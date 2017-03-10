@@ -90,12 +90,10 @@ def validate_string_or_none(option, value):
     return validate_string(option, value)
 
 
-def validate_mongo_field_name_or_none(option, value):
+def validate_mongo_field_name(option, value):
     """Validates the MongoDB field name format described in:
     https://docs.mongodb.com/manual/core/document/#field-names
     """
-    if value is None:
-        return value
     validate_string(option, value)
     if value == '':
         return value
@@ -109,6 +107,31 @@ def validate_mongo_field_name_or_none(option, value):
         raise ValueError('%s cannot contain the null character, %r.'
                          % (option, value))
     return value
+
+
+def validate_mongo_keys(option, dct):
+    """Recursively validate that all dictionary keys are valid in MongoDB."""
+    for key in dct:
+        validate_mongo_field_name(option, key)
+        value = dct[key]
+        if isinstance(value, dict):
+            validate_mongo_keys(option, value)
+        elif isinstance(value, (list, tuple)):
+            validate_mongo_keys_in_list(option, value)
+
+
+def validate_mongo_keys_in_list(option, lst):
+    for elem in lst:
+        if isinstance(elem, dict):
+            validate_mongo_keys(option, elem)
+        elif isinstance(elem, (list, tuple)):
+            validate_mongo_keys_in_list(option, elem)
+
+
+def validate_mongo_field_name_or_none(option, value):
+    if value is None:
+        return value
+    return validate_mongo_field_name(option, value)
 
 
 def validate_boolean(option, value):

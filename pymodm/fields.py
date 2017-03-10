@@ -49,7 +49,7 @@ except ImportError:
 
 from pymodm import validators
 from pymodm.base.fields import RelatedModelFieldsBase, GeoJSONField
-from pymodm.common import _import
+from pymodm.common import _import, validate_mongo_keys
 from pymodm.compat import text_type, string_types, PY3
 from pymodm.connection import _get_db
 from pymodm.errors import ValidationError, ConfigurationError
@@ -701,15 +701,10 @@ class DictField(MongoBaseField):
 
         self.validators.append(self.to_mongo)
 
+        # Recursively validate that all dictionary keys are valid in MongoDB.
         def validate_keys(value):
-            for key in value:
-                if not isinstance(key, string_types):
-                    raise ValidationError(
-                        'All dictionary keys must be strings: %r' % value)
-                if '.' in key or '$' in key:
-                    raise ValidationError(
-                        'Dictionary keys must not contain "$" or ".": %r'
-                        % value)
+            validate_mongo_keys('Dictionary keys', value)
+
         self.validators.append(validate_keys)
 
     def to_mongo(self, value):
