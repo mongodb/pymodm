@@ -581,7 +581,7 @@ class MongoModel(
       - `indexes`: This is a list of :class:`~pymongo.operations.IndexModel`
         instances that describe the indexes that should be created for this
         model. Indexes are created when the class definition is evaluated.
-      - `ignore_unkown_fields`: If ``True``, fields that aren't defined in the
+      - `ignore_unknown_fields`: If ``True``, fields that aren't defined in the
         model will be ignored when parsing documents from MongoDB, such as in
         :meth:`~pymodm.MongoModel.from_document`. By default, unknown fields
         will cause a ``ValueError`` to be raised. Note that with this option
