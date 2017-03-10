@@ -100,6 +100,16 @@ class BasicModelTestCase(ODMTestCase):
         class Document(MongoModel):
             name = CharField()
 
+        with self.assertRaisesRegex(ValueError, 'Unrecognized field .*age'):
+            retrieved = Document.objects.raw({'name': 'Test'}).first()
+
+        # Redefine document, this time ignoring unknown fields.
+        class Document(MongoModel):
+            name = CharField()
+
+            class Meta:
+                ignore_unknown_fields = True
+
         # No error.
         retrieved = Document.objects.raw({'name': 'Test'}).first()
 
