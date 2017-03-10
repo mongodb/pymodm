@@ -19,7 +19,7 @@ import bson
 from pymodm import fields, MongoModel
 from pymodm.errors import ValidationError
 
-from test import ODMTestCase, DB
+from test import ODMTestCase, DB, INVALID_MONGO_NAMES, VALID_MONGO_NAMES
 
 
 def name_must_be_capitalized(name):
@@ -91,13 +91,12 @@ class FieldsTestCase(ODMTestCase):
                 _id = fields.CharField()
 
     def test_validate_mongo_name(self):
-        invalid_mongo_names = ['$dollar', 'has.dot', 'null\x00character']
-        for invalid_mongo_name in invalid_mongo_names:
+        for invalid_mongo_name in INVALID_MONGO_NAMES:
             with self.assertRaisesRegex(ValueError, 'mongo_name cannot .*'):
                 class InvalidMongoName(MongoModel):
                     field = fields.CharField(mongo_name=invalid_mongo_name)
-        valid_mongo_names = ['', 'dollar$', 'foo']
-        for valid_mongo_name in valid_mongo_names:
+
+        for valid_mongo_name in VALID_MONGO_NAMES:
             class ValidMongoName(MongoModel):
                 field = fields.CharField(mongo_name=valid_mongo_name)
             self.assertEqual(ValidMongoName.field.mongo_name,
