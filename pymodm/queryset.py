@@ -14,9 +14,12 @@
 
 import copy
 
+import pymongo
+
 from pymodm import errors
 from pymodm.common import (
-    _import, validate_boolean, validate_list_or_tuple, validate_mapping)
+    _import, validate_boolean, validate_list_or_tuple, validate_mapping,
+    validate_ordering)
 
 
 class QuerySet(object):
@@ -221,8 +224,27 @@ class QuerySet(object):
             consisting of [(field_name, direction)], where "direction" can
             be one of :data:`~pymongo.ASCENDING` or :data:`~pymongo.DESCENDING`.
         """
+        ordering = validate_ordering('ordering', ordering)
         clone = self._clone()
         clone._order_by = ordering
+        return clone
+
+    def reverse(self):
+        """Reverse the ordering for this QuerySet.
+
+        If :meth:`~pymodm.queryset.QuerySet.order_by has not been called,
+        reverse() has no effect.
+        """
+        clone = self._clone()
+        if clone._order_by:
+            reversed_order_by = []
+            for field, order in clone._order_by:
+                if order == pymongo.ASCENDING:
+                    reversed_order = pymongo.DESCENDING
+                else:
+                    reversed_order = pymongo.ASCENDING
+                reversed_order_by.append((field, reversed_order))
+            clone._order_by = reversed_order_by
         return clone
 
     def project(self, projection):

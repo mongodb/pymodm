@@ -92,6 +92,28 @@ class QuerySetTestCase(ODMTestCase):
         self.assertEqual('Amarth', results[2].lname)
         self.assertEqual('Tomato', results[3].lname)
 
+    def test_order_by_validation(self):
+        with self.assertRaises(TypeError):
+            User.objects.order_by('not a list')
+        with self.assertRaises(TypeError):
+            User.objects.order_by([(1, 1)])
+        with self.assertRaises(ValueError):
+            User.objects.order_by([('field', 1, 'too many elements')])
+        with self.assertRaises(ValueError):
+            User.objects.order_by([('field', 2)])
+
+    def test_reverse(self):
+        def assert_reverses(qs):
+            normal_order = list(qs)
+            reversed_order = list(qs.reverse())
+            double_reversed = list(qs.reverse().reverse())
+            self.assertEqual(normal_order, list(reversed(reversed_order)))
+            self.assertEqual(normal_order, double_reversed)
+
+        assert_reverses(User.objects.order_by([('_id', 1)]))
+        assert_reverses(User.objects.order_by(
+            [('_id', 1), ('phone', -1), ('lname', 1)]))
+
     def test_project(self):
         results = User.objects.project({'lname': 1})
         for result in results:

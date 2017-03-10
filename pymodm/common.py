@@ -17,6 +17,8 @@ import re
 from collections import Mapping
 from importlib import import_module
 
+import pymongo
+
 from pymodm.errors import ModelDoesNotExist
 
 from pymodm.compat import string_types
@@ -140,3 +142,17 @@ def validate_mapping(option, value):
         raise TypeError('%s must be a Mapping, not a %s'
                         % (option, value.__class__.__name__))
     return value
+
+
+def validate_ordering(option, ordering):
+    ordering = validate_list_or_tuple(option, ordering)
+    for order in ordering:
+        order = validate_list_or_tuple(option + "'s elements", order)
+        if len(order) != 2:
+            raise ValueError("%s's elements must be (field_name, "
+                             "direction) not %s" % (option, order))
+        validate_string("field_name", order[0])
+        if order[1] not in (pymongo.ASCENDING, pymongo.DESCENDING):
+            raise ValueError("sort direction must be pymongo.ASCENDING or '"
+                             "pymongo.DECENDING not %s" % (order[1]))
+    return ordering
