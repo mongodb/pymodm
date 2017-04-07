@@ -45,7 +45,7 @@ you're more likely to get an answer on the `mongodb-user
 Bugs / Feature Requests
 =======================
 
-Think you’ve found a bug? Want to see a new feature in PyMODM? open
+Think you’ve found a bug? Want to see a new feature in PyMODM? Please open
 a case in our issue management tool, JIRA:
 
 - `Create an account and login <https://jira.mongodb.org>`_.
