@@ -158,3 +158,8 @@ Here's a basic example of how to define some models and connect them to MongoDB:
 
   # u'Five Crazy Health Foods Jabba Eats.'
   print(slideshow_titles.first().title)
+
+
+.. image:: https://badges.gitter.im/mongodb/pymodm.svg
+   :alt: Join the chat at https://gitter.im/mongodb/pymodm
+   :target: https://gitter.im/mongodb/pymodm?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
