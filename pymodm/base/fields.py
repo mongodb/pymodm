@@ -154,8 +154,6 @@ class MongoBaseField(object):
             else:
                 raise ValidationError('must not be blank (was: %r)' % value)
 
-        value = self.to_python(value)
-
         if self.choices:
             self._validate_choices(value)
 
