@@ -83,11 +83,7 @@ class MongoBaseField(object):
     def __get__(self, inst, owner):
         MongoModelBase = _import('pymodm.base.models.MongoModelBase')
         if inst is not None and isinstance(inst, MongoModelBase):
-            python_value = inst._data.get(self.attname, self.get_default())
-            if self.is_blank(python_value):
-                return python_value
-            
-            return python_value
+            return inst._data.get(self.attname, self.get_default())
         # Access from outside a Model instance.
         return self
 
