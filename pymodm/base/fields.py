@@ -83,7 +83,7 @@ class MongoBaseField(object):
     def __get__(self, inst, owner):
         MongoModelBase = _import('pymodm.base.models.MongoModelBase')
         if inst is not None and isinstance(inst, MongoModelBase):
-            raw_value = inst._data.get(self.attname, self.get_default())
+            raw_value = inst._data.get(self.attname, self._get_default_once(inst))
             if self.is_blank(raw_value):
                 return raw_value
             # Cache pythonized value.
@@ -101,6 +101,13 @@ class MongoBaseField(object):
 
     def get_default(self):
         return self.default() if callable(self.default) else self.default
+
+    def _get_default_once(self, inst):
+        if not hasattr(inst, '_defaults'):
+            inst._defaults = {}
+        if self.attname not in inst._defaults:
+            inst._defaults[self.attname] = self.get_default()
+        return inst._defaults[self.attname]
 
     def is_blank(self, value):
         """Determine if the value is blank."""
