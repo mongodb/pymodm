@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from pymodm import MongoModel
 from pymodm.errors import ValidationError
-from pymodm.fields import ListField, IntegerField
+from pymodm.fields import ListField, IntegerField, CharField
 
 from test.field_types import FieldTestCase
 
@@ -21,6 +22,9 @@ from test.field_types import FieldTestCase
 class ListFieldTestCase(FieldTestCase):
 
     field = ListField(IntegerField(min_value=0))
+
+    class Article(MongoModel):
+        tags = ListField(CharField())
 
     def test_conversion(self):
         self.assertConversion(self.field, [1, 2, 3], [1, 2, 3])
@@ -33,3 +37,11 @@ class ListFieldTestCase(FieldTestCase):
 
     def test_get_default(self):
         self.assertEqual([], self.field.get_default())
+
+    def test_mutable_default(self):
+        article = self.Article()
+        self.assertIs(article.tags, article.tags)
+
+        article.tags.append('foo')
+        article.tags.append('bar')
+        self.assertEquals(article.tags, ['foo', 'bar'])
