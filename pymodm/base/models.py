@@ -167,11 +167,6 @@ class TopLevelMongoModelMetaclass(MongoModelMetaclass):
             new_class.add_to_class('objects', manager)
         new_class._mongometa.default_manager = manager
 
-        # Create any indexes defined in our options.
-        indexes = new_class._mongometa.indexes
-        if indexes:
-            new_class._mongometa.collection.create_indexes(indexes)
-
         return new_class
 
     def _find_manager(cls):
