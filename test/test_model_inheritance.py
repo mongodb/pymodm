@@ -105,5 +105,8 @@ class ModelInheritanceTest(ODMTestCase):
         class ChildModel(ModelWithIndexes):
             pass
 
+        # force connection
+        ModelWithIndexes._mongometa.collection
+
         index_info = DB.model_with_indexes.index_information()
         self.assertTrue(index_info['product_id_1_name_1']['unique'])
