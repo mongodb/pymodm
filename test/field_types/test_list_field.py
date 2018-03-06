@@ -56,6 +56,6 @@ class ListFieldTestCase(FieldTestCase):
         del article.tags
         self.assertEqual(article.tags, [])
 
-        # Ensure the deleted field is removed the database.
+        # Ensure the deleted field is removed from the database.
         article.save()
         self.assertNotIn('tags', DB.article.find_one())
