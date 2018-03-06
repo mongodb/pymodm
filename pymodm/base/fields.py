@@ -98,6 +98,7 @@ class MongoBaseField(object):
 
     def __delete__(self, inst):
         inst._data.pop(self.attname, None)
+        inst._defaults.pop(self.attname, None)
 
     def get_default(self):
         return self.default() if callable(self.default) else self.default

@@ -16,6 +16,7 @@ from pymodm import MongoModel
 from pymodm.errors import ValidationError
 from pymodm.fields import ListField, IntegerField, CharField
 
+from test import DB
 from test.field_types import FieldTestCase
 
 
@@ -44,9 +45,17 @@ class ListFieldTestCase(FieldTestCase):
 
         article.tags.append('foo')
         article.tags.append('bar')
-        self.assertEquals(article.tags, ['foo', 'bar'])
+        self.assertEqual(article.tags, ['foo', 'bar'])
 
         # Ensure tags is saved to the database.
         article.save()
         self.assertEqual(article.tags, self.Article.objects.first().tags)
-        self.assertEqual(self.Article().tags, [])
+        self.assertEqual(article.tags, ['foo', 'bar'])
+
+        # Ensure that deleting a field restores the default value.
+        del article.tags
+        self.assertEqual(article.tags, [])
+
+        # Ensure the deleted field is removed the database.
+        article.save()
+        self.assertNotIn('tags', DB.article.find_one())
