@@ -192,6 +192,8 @@ class MongoModelBase(object):
     def __init__(self, *args, **kwargs):
         # Initialize dict for saving field values.
         self._data = {}
+        # Initialize dict for saving field default values.
+        self._defaults = {}
 
         # Turn ordered arguments into keyword arguments.
         if args:

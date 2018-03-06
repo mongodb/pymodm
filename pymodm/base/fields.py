@@ -104,8 +104,6 @@ class MongoBaseField(object):
         return self.default() if callable(self.default) else self.default
 
     def _get_default_once(self, inst):
-        if not hasattr(inst, '_defaults'):
-            inst._defaults = {}
         try:
             return inst._defaults[self.attname]
         except KeyError:
