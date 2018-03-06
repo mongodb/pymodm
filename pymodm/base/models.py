@@ -240,21 +240,23 @@ class MongoModelBase(object):
     def _set_attributes(self, dict):
         """Set this object's attributes from a dict."""
         self._data.clear()
-        field_names = {
-            field.mongo_name: field.attname
+        fields = {
+            field.mongo_name: field
             for field in self._mongometa.get_fields()
         }
         ignore_unknown = self._mongometa.ignore_unknown_fields
-        for field in dict:
-            if '_cls' == field:
+        for field_name, value in dict_.items():
+            if '_cls' == field_name:
                 continue
-            elif '_id' == field and not self._mongometa.implicit_id:
-                setattr(self, self._mongometa.pk.attname, dict[field])
-            elif field in field_names:
-                setattr(self, field_names[field], dict[field])
+            elif '_id' == field_name and not self._mongometa.implicit_id:
+                setattr(self, self._mongometa.pk.attname, value)
+            elif field_name in fields:
+                field = fields[field_name]
+                setattr(self, field.attname, field.to_python(value))
             elif not ignore_unknown:
                 raise ValueError(
-                    'Unrecognized field name %r' % field)
+                    'Unrecognized field name %r' % field_name)
+
 
     @classmethod
     def from_document(cls, document):
