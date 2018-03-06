@@ -45,3 +45,8 @@ class ListFieldTestCase(FieldTestCase):
         article.tags.append('foo')
         article.tags.append('bar')
         self.assertEquals(article.tags, ['foo', 'bar'])
+
+        # Ensure tags is saved to the database.
+        article.save()
+        self.assertEqual(article.tags, self.Article.objects.first().tags)
+        self.assertEqual(self.Article().tags, [])
