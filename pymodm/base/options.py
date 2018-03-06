@@ -53,15 +53,20 @@ class MongoOptions(object):
         self.collation = None
         self.ignore_unknown_fields = False
         self._auto_dereference = True
+        self._indexes_created = False
 
     @property
     def collection(self):
-        return _get_db(self.connection_alias).get_collection(
+        coll = _get_db(self.connection_alias).get_collection(
             self.collection_name,
             read_preference=self.read_preference,
             read_concern=self.read_concern,
             write_concern=self.write_concern,
             codec_options=self.codec_options)
+        if self.indexes and not self._indexes_created:
+            coll.create_indexes(self.indexes)
+            self._indexes_created = True
+        return coll
 
     @property
     def auto_dereference(self):

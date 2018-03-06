@@ -101,9 +101,21 @@ class ModelInheritanceTest(ODMTestCase):
                     IndexModel([('product_id', 1), ('name', 1)], unique=True)
                 ]
 
-        # No Exception.
         class ChildModel(ModelWithIndexes):
             pass
 
+        # Creating a model class does not create the indexes.
+        index_info = DB.model_with_indexes.index_information()
+        self.assertNotIn('product_id_1_name_1', index_info)
+
+        # Indexes are only created once the Model's collection is accessed.
+        ModelWithIndexes._mongometa.collection
         index_info = DB.model_with_indexes.index_information()
         self.assertTrue(index_info['product_id_1_name_1']['unique'])
+
+        # Creating indexes on the child should not error.
+        ChildModel._mongometa.collection
+
+        # Index info should not have changed.
+        final_index_info = DB.model_with_indexes.index_information()
+        self.assertEqual(index_info, final_index_info)
