@@ -106,9 +106,12 @@ class MongoBaseField(object):
     def _get_default_once(self, inst):
         if not hasattr(inst, '_defaults'):
             inst._defaults = {}
-        if self.attname not in inst._defaults:
-            inst._defaults[self.attname] = self.get_default()
-        return inst._defaults[self.attname]
+        try:
+            return inst._defaults[self.attname]
+        except KeyError:
+            default = self.get_default()
+            inst._defaults[self.attname] = default
+            return default
 
     def is_blank(self, value):
         """Determine if the value is blank."""
