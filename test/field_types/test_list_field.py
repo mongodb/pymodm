@@ -24,9 +24,6 @@ class ListFieldTestCase(FieldTestCase):
 
     field = ListField(IntegerField(min_value=0))
 
-    class Article(MongoModel):
-        tags = ListField(CharField())
-
     def test_conversion(self):
         self.assertConversion(self.field, [1, 2, 3], [1, 2, 3])
         self.assertConversion(self.field, [1, 2, 3], ['1', '2', '3'])
@@ -38,30 +35,3 @@ class ListFieldTestCase(FieldTestCase):
 
     def test_get_default(self):
         self.assertEqual([], self.field.get_default())
-
-    def test_mutable_default(self):
-        article = self.Article()
-        self.assertIs(article.tags, article.tags)
-
-        article.tags.append('foo')
-        article.tags.append('bar')
-        self.assertEqual(article.tags, ['foo', 'bar'])
-
-        # Ensure tags is saved to the database.
-        article.save()
-        self.assertEqual(article.tags, self.Article.objects.first().tags)
-        self.assertEqual(article.tags, ['foo', 'bar'])
-
-        # Ensure that deleting a field restores the default value.
-        del article.tags
-        self.assertEqual(article.tags, [])
-
-        # Ensure the deleted field is removed from the database.
-        article.save()
-        self.assertNotIn('tags', DB.article.find_one())
-
-        # Ensure that a refresh restores the default value.
-        article.tags.append('foo')
-        self.assertEqual(article.tags, ['foo'])
-        article.refresh_from_db()
-        self.assertEqual(article.tags, [])

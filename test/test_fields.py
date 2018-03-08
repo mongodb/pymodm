@@ -259,3 +259,33 @@ class FieldsTestCase(ODMTestCase):
 
         inst = CallableEmptyValue().save()
         self.assertNotIn('list_of_things', DB.callable_empty_value.find_one())
+
+    def test_mutable_default(self):
+        class Article(MongoModel):
+            tags = fields.ListField(fields.CharField())
+
+        article = Article()
+        self.assertIs(article.tags, article.tags)
+
+        article.tags.append('foo')
+        article.tags.append('bar')
+        self.assertEqual(article.tags, ['foo', 'bar'])
+
+        # Ensure tags is saved to the database.
+        article.save()
+        self.assertEqual(article.tags, Article.objects.first().tags)
+        self.assertEqual(article.tags, ['foo', 'bar'])
+
+        # Ensure that deleting a field restores the default value.
+        del article.tags
+        self.assertEqual(article.tags, [])
+
+        # Ensure the deleted field is removed from the database.
+        article.save()
+        self.assertNotIn('tags', DB.article.find_one())
+
+        # Ensure that a refresh restores the default value.
+        article.tags.append('foo')
+        self.assertEqual(article.tags, ['foo'])
+        article.refresh_from_db()
+        self.assertEqual(article.tags, [])
