@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from pymodm import MongoModel
 from pymodm.errors import ValidationError
-from pymodm.fields import ListField, IntegerField
+from pymodm.fields import ListField, IntegerField, CharField
 
+from test import DB
 from test.field_types import FieldTestCase
 
 
