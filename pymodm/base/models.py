@@ -247,6 +247,7 @@ class MongoModelBase(object):
     def _set_attributes(self, dict):
         """Set this object's attributes from a dict."""
         self._data.clear()
+        self._defaults.clear()
         field_names = {
             field.mongo_name: field.attname
             for field in self._mongometa.get_fields()

@@ -59,3 +59,9 @@ class ListFieldTestCase(FieldTestCase):
         # Ensure the deleted field is removed from the database.
         article.save()
         self.assertNotIn('tags', DB.article.find_one())
+
+        # Ensure that a refresh restores the default value.
+        article.tags.append('foo')
+        self.assertEqual(article.tags, ['foo'])
+        article.refresh_from_db()
+        self.assertEqual(article.tags, [])
