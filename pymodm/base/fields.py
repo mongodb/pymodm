@@ -117,7 +117,18 @@ class MongoBaseField(object):
 
     def is_undefined(self, inst):
         """Determine if a field is undefined (has not been given any value)."""
-        return self.attname not in inst._data
+        # If the field is in _data, then it's not undefined.
+        # This happens when you explicitly assign the field.
+        if self.attname in inst._data:
+            return False
+
+        # It's also possible to initialize a field by mutating its default value.
+        # When this happens, the field is in _defaults instead of _data,
+        # but the value in _defaults is different from the original default value.
+        if self.attname in inst._defaults and inst._defaults[self.attname] != self.get_default():
+            return False
+
+        return True
 
     @property
     def verbose_name(self):
