@@ -267,8 +267,11 @@ class FieldsTestCase(ODMTestCase):
         article = Article()
         self.assertIs(article.tags, article.tags)
 
-        article.tags.append('foo')
-        article.tags.append('bar')
+        tags = article.tags
+        tags.append('foo')
+        tags.append('bar')
+        self.assertFalse(Article.tags.is_undefined(article))
+        self.assertEqual(article.to_son()['tags'], ['foo', 'bar'])
         self.assertEqual(article.tags, ['foo', 'bar'])
 
         # Ensure tags is saved to the database.
