@@ -295,7 +295,7 @@ class MongoModelBase(object):
             for field in self._mongometa.get_fields():
                 if field.is_undefined(self):
                     continue
-                raw_value = self._data.get(field.attname)
+                raw_value = field.value_from_object(self)
                 if field.is_blank(raw_value):
                     son[field.mongo_name] = raw_value
                 else:
