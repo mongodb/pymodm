@@ -17,7 +17,7 @@ import re
 
 import bson
 
-from pymodm import fields, MongoModel
+from pymodm import fields, MongoModel, EmbeddedMongoModel
 from pymodm.errors import ValidationError
 
 from test import ODMTestCase, DB, INVALID_MONGO_NAMES, VALID_MONGO_NAMES
@@ -292,3 +292,39 @@ class FieldsTestCase(ODMTestCase):
         self.assertEqual(article.tags, ['foo'])
         article.refresh_from_db()
         self.assertEqual(article.tags, [])
+
+    def test_mapfield(self):
+
+        class MapField(fields.MongoBaseField):
+            """
+            A field that maps a string to a specified field type. Similar to
+            a DictField, except the values in the dict must match the specified
+            field type.
+            """
+            def __init__(self, field, *args, **kwargs):
+                kwargs.setdefault('default', dict)
+                super(MapField, self).__init__(*args, **kwargs)
+                self.field = field
+
+            def to_python(self, value):
+                return { k: self.field.to_python(v) for k, v in value.items() }
+
+            def to_mongo(self, value):
+                return bson.SON([ (k, self.field.to_mongo(v)) for k, v in value.items() ])
+
+
+        class Article(EmbeddedMongoModel):
+            tags = fields.ListField(fields.CharField())
+        class Blog(MongoModel):
+            articles = MapField(fields.EmbeddedDocumentField(Article))
+
+        blog = Blog()
+        blog.articles['t'] = Article()
+
+        tags = blog.articles['t'].tags
+        tags.append('foo')
+        tags.append('bar')
+
+        blog.save()
+
+        self.assertEqual(Blog.objects.first().articles['t'].tags, ['foo', 'bar'])
