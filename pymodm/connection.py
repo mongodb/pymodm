@@ -24,8 +24,8 @@ __all__ = ['connect']
 
 
 class ConnectionInfo:
-    """Stores the information of each connection alias
-    """
+    """Stores the information of each connection alias"""
+
     __slots__ = ('parsed_uri', 'conn_string', 'database')
 
     def __init__(self, parsed_uri, conn_string, database):
@@ -87,6 +87,7 @@ def connect(mongodb_uri, alias=DEFAULT_CONNECTION_ALIAS, **kwargs):
         within the string that are supported by PyMongo. `mongodb_uri` must
         specify a database, which will be used by any
         :class:`~pymodm.MongoModel` that uses this connection.
+
       - `alias`: An optional name for this connection, backed by a
         :class:`~pymongo.mongo_client.MongoClient` instance that is cached under
         this name. You can specify what connection a MongoModel uses by
@@ -95,9 +96,9 @@ def connect(mongodb_uri, alias=DEFAULT_CONNECTION_ALIAS, **kwargs):
         the :class:`~pymodm.context_managers.switch_connection` context
         manager.  Note that calling `connect()` multiple times with the same
         alias will replace any previous connections.
+
       - `kwargs`: Additional keyword arguments to pass to the underlying
         :class:`~pymongo.mongo_client.MongoClient`.
-
     """
     # Make sure the database is provided.
     parsed_uri = uri_parser.parse_uri(mongodb_uri)
