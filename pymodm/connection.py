@@ -15,8 +15,6 @@
 """Tools for managing connections in MongoModels."""
 import sys
 
-from collections import namedtuple
-
 from pymongo import uri_parser, MongoClient
 
 from pymodm.compat import reraise
@@ -25,9 +23,51 @@ from pymodm.compat import reraise
 __all__ = ['connect']
 
 
-"""Information stored with each connection alias."""
-ConnectionInfo = namedtuple(
-    'ConnectionInfo', ('parsed_uri', 'conn_string', 'database'))
+class ConnectionInfo:
+    """Stores the information of each connection alias
+    """
+    __slots__ = ('parsed_uri', 'conn_string', 'database')
+
+    def __init__(self, parsed_uri, conn_string, database):
+        """Initializes the ConnectionInfo Object
+
+        :parameters:
+          - `parsed_uri` (dict): A dict of the form:
+
+            {
+                'nodelist': <list of (host, port) tuples>,
+                'username': <username> or None,
+                'password': <password> or None,
+                'database': <database name> or None,
+                'collection': <collection name> or None,
+                'options': <dict of MongoDB URI options>
+            }
+
+          - `connection_str` (str): expects a `mongodb_uri`, a MongoDB connection
+            of the general form:
+
+                'mongodb://localhost:27017/<db_name>'
+
+            Any options may be passed within the string that are supported by PyMongo.
+            `mongodb_uri` must specify a database, which will be used by any
+            :class:`~pymodm.MongoModel` that uses this connection.
+
+          - `database` (pymongo.database.Database): of the general form:
+
+                Database(
+                    MongoClient(
+                        host=['localhost:27017'],
+                        document_class=dict,
+                        tz_aware=False,
+                        connect=False,
+                        event_listeners=[]
+                    ),
+                    'foo'
+                )
+        """
+        self.parsed_uri = parsed_uri
+        self.conn_string = conn_string
+        self.database = database
 
 
 DEFAULT_CONNECTION_ALIAS = 'default'
