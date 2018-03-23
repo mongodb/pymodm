@@ -15,8 +15,6 @@
 """Tools for managing connections in MongoModels."""
 import sys
 
-from collections import namedtuple
-
 from pymongo import uri_parser, MongoClient
 
 from pymodm.compat import reraise
