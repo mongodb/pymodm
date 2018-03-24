@@ -22,6 +22,10 @@ from pymodm.compat import reraise
 
 __all__ = ['connect']
 
+DEFAULT_CONNECTION_ALIAS = 'default'
+
+_CONNECTIONS = dict()
+
 
 class ConnectionInfo:
     """Stores the information of each connection alias"""
@@ -68,12 +72,6 @@ class ConnectionInfo:
         self.parsed_uri = parsed_uri
         self.conn_string = conn_string
         self.database = database
-
-
-DEFAULT_CONNECTION_ALIAS = 'default'
-
-
-_CONNECTIONS = dict()
 
 
 def connect(mongodb_uri, alias=DEFAULT_CONNECTION_ALIAS, **kwargs):
