@@ -28,7 +28,7 @@ class RegularExpressionFieldTestCase(FieldTestCase):
     regex = Regex.from_native(pattern)
 
     def test_to_python(self):
-        self.assertEqual(self.pattern, self.field.to_python(self.regex))
+        self.assertEqual(self.pattern, self.field.to_python(self.pattern))
 
     def test_to_mongo(self):
         self.assertEqual(self.regex, self.field.to_mongo(self.regex))
