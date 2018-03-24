@@ -38,8 +38,10 @@ _CONNECTIONS = dict()
 
 def connect(mongodb_uri, alias=DEFAULT_CONNECTION_ALIAS, **kwargs):
     """Register a connection to MongoDB, optionally providing a name for it.
+
     Note: :func:`connect` must be called with before any
     :class:`~pymodm.MongoModel` is used with the given `alias`.
+
     :parameters:
       - `mongodb_uri`: A MongoDB connection string. Any options may be passed
         within the string that are supported by PyMongo. `mongodb_uri` must
@@ -55,6 +57,7 @@ def connect(mongodb_uri, alias=DEFAULT_CONNECTION_ALIAS, **kwargs):
         alias will replace any previous connections.
       - `kwargs`: Additional keyword arguments to pass to the underlying
         :class:`~pymongo.mongo_client.MongoClient`.
+
     """
     # Make sure the database is provided.
     parsed_uri = uri_parser.parse_uri(mongodb_uri)
