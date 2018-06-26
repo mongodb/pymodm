@@ -22,7 +22,7 @@ Now that we have all the components, let's connect them together. In ``pymodm``,
 you connect to MongoDB by calling the :func:`~pymodm.connection.connect`
 function::
 
-    from pymodm import connect
+    from pymodm.connection import connect
 
     # Connect to MongoDB and call the connection "my-app".
     connect("mongodb://localhost:27017/myDatabase", alias="my-app")
