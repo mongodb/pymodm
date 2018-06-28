@@ -1137,14 +1137,13 @@ class ReferenceField(RelatedModelFieldsBase):
             references.
           - `on_delete`: The action to take (if any) when the referenced object
             is deleted. The delete rule should be one of the following:
-          - `verbose_name`: A human-readable name for the Field.
-          - `mongo_name`: The name of this field when stored in MongoDB.
-
             * :attr:`ReferenceField.DO_NOTHING` (default).
             * :attr:`ReferenceField.NULLIFY`
             * :attr:`ReferenceField.CASCADE`
             * :attr:`ReferenceField.DENY`
             * :attr:`ReferenceField.PULL`
+          - `verbose_name`: A human-readable name for the Field.
+          - `mongo_name`: The name of this field when stored in MongoDB.
 
         .. seealso:: constructor for
                      :class:`~pymodm.base.fields.MongoBaseField`
