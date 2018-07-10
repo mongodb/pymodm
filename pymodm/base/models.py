@@ -16,6 +16,7 @@ from bson.dbref import DBRef
 from bson.son import SON
 
 from pymodm import errors
+from pymodm.lazy_decoder import LazyDecoder
 from pymodm.base.options import MongoOptions
 from pymodm.common import (
     register_document, get_document, validate_mapping,
@@ -152,7 +153,7 @@ class TopLevelMongoModelMetaclass(MongoModelMetaclass):
 
         # Conceptually the same as 'if new_class is MongoModelBase'.
         if not hasattr(new_class, '_mongometa'):
-            return new_class
+           return new_class
 
         # Check for a primary key field. If there isn't one, put one there.
         if new_class._mongometa.pk is None:
@@ -185,8 +186,9 @@ class MongoModelBase(object):
     """Base class for MongoModel and EmbeddedMongoModel."""
 
     def __init__(self, *args, **kwargs):
-        # Initialize dict for saving field values.
-        self._data = {}
+        # Initialize dicts for saving python/mongo field values.
+        self._data = LazyDecoder()
+
         # Initialize dict for saving field default values.
         self._defaults = {}
 
@@ -252,9 +254,10 @@ class MongoModelBase(object):
             if '_cls' == field:
                 continue
             elif '_id' == field and not self._mongometa.implicit_id:
-                setattr(self, self._mongometa.pk.attname, dict[field])
+                self._data.set_mongo_value(
+                    self._mongometa.pk.attname, dict[field])
             elif field in field_names:
-                setattr(self, field_names[field], dict[field])
+                self._data.set_mongo_value(field_names[field], dict[field])
             elif not ignore_unknown:
                 raise ValueError(
                     'Unrecognized field name %r' % field)
@@ -293,13 +296,9 @@ class MongoModelBase(object):
         son = SON()
         with no_auto_dereference(self):
             for field in self._mongometa.get_fields():
-                if field.is_undefined(self):
-                    continue
-                raw_value = self._data.get(field.attname)
-                if field.is_blank(raw_value):
-                    son[field.mongo_name] = raw_value
-                else:
-                    son[field.mongo_name] = field.to_mongo(raw_value)
+                son[field.mongo_name] = self._data.get_mongo_value(
+                    field.attname, field.to_mongo
+                )
         # Add metadata about our type, so that we instantiate the right class
         # when retrieving from MongoDB.
         if not self._mongometa.final:
@@ -388,7 +387,16 @@ class MongoModelBase(object):
 
     def __eq__(self, other):
         if isinstance(other, MongoModelBase):
-            return self._data == other._data
+            if self._data == other._data:
+                return True
+            fields_self = set(iter(self))
+            fields_other = set(iter(other))
+            if fields_self != fields_other:
+                return False
+            for fname in fields_self:
+                if getattr(self, fname) != other(self, fname):
+                    return False
+            return True
         return NotImplemented
 
 
