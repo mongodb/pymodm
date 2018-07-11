@@ -65,7 +65,37 @@ class Student2d(Person):
     )
 
 
+class SensibleDecimal(fields.Decimal128Field):
+    """ Toy class to test field encoding/decoding behavior."""
+    def __init__(self, *args, **kwargs):
+        self.to_python_call_count = 0
+        self.to_mongo_call_count = 0
+        super(SensibleDecimal, self).__init__(*args, **kwargs)
+
+    def to_python(self, value):
+        self.to_python_call_count += 1
+        return value.to_decimal()
+
+    def to_mongo(self, value):
+        self.to_mongo_call_count += 1
+        return bson.Decimal128(value)
+
+
+class Simple2(MongoModel):
+    qty = SensibleDecimal()
+
+
 class FieldsTestCase(ODMTestCase):
+
+    def test_field_encoding_decoding(self):
+        from decimal import Decimal
+        import ipdb as pdb
+        pdb.set_trace()
+        Simple2(qty=Decimal("1.23")).save()
+        # Get the object twice.
+        _ = Simple2.objects.get()
+        _ = Simple2.objects.get()
+        self.assertEqual(Simple2.qty.to_python_call_count, 1)
 
     def test_field_dbname(self):
         self.assertEqual('firstName', Person.first_name.mongo_name)
