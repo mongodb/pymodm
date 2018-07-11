@@ -283,7 +283,8 @@ class Decimal128Field(MongoBaseField):
 
         def validate_min_and_max(value):
             # Turn value into a Decimal.
-            value = value.to_decimal()
+            if not isinstance(value, decimal.Decimal):
+                value = value.to_decimal()
             validators.validator_for_min_max(min_value, max_value)(value)
 
         self.validators.append(
