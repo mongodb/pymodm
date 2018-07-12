@@ -72,6 +72,25 @@ class TestLazyDecoder(unittest.TestCase):
         self.ld.set_python_value('python2', 'hellonewworld')
         self.assertNotEqual(self.ld, ld2)
 
+    def test_pop(self):
+        def _generate_keyset(*iterables):
+            return set([k for k in iter(chain(*iterables))])
+
+        all_keys = _generate_keyset(MONGO_DATA, PYTHON_DATA)
+        expected_keyset = copy.copy(all_keys)
+        for key in all_keys:
+            self.ld.pop(key)
+            expected_keyset.discard(key)
+            data_keyset = _generate_keyset(
+                self.ld._python_data, self.ld._mongo_data)
+            iter_keyset = _generate_keyset(self.ld)
+
+            # For each check the data, iter, and contains.
+            self.assertEqual(data_keyset, expected_keyset)
+            self.assertEqual(iter_keyset, expected_keyset)
+            for candidate_key in expected_keyset:
+                self.assertTrue(candidate_key in self.ld)
+
     def test_get_mongo_data_as_mongo_value(self):
         ldcopy = copy.deepcopy(self.ld)
         key = next(iter(self.ld._mongo_data))
