@@ -295,6 +295,8 @@ class MongoModelBase(object):
         son = SON()
         with no_auto_dereference(self):
             for field in self._mongometa.get_fields():
+                if field.is_undefined(self):
+                    continue
                 son[field.mongo_name] = self._data.get_mongo_value(
                     field.attname, field.to_mongo
                 )
@@ -620,6 +622,10 @@ class LazyDecoder(object):
     def __eq__(self, other):
         return (self._mongo_data == other._mongo_data and
                 self._python_data == other._python_data)
+
+    def pop(self, key, default):
+        return (self._mongo_data.pop(key, default) or
+                self._python_data.pop(key, default))
 
     def clear(self):
         self._mongo_data.clear()

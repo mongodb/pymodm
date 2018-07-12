@@ -283,8 +283,10 @@ class Decimal128Field(MongoBaseField):
 
         def validate_min_and_max(value):
             # Turn value into a Decimal.
-            if not isinstance(value, decimal.Decimal):
+            if isinstance(value, Decimal128):
                 value = value.to_decimal()
+            elif not isinstance(value, decimal.Decimal):
+                value = decimal.Decimal(value)
             validators.validator_for_min_max(min_value, max_value)(value)
 
         self.validators.append(
@@ -1203,11 +1205,9 @@ class ReferenceField(RelatedModelFieldsBase):
     def __get__(self, inst, owner):
         MongoModelBase = _import('pymodm.base.models.MongoModelBase')
         if inst is not None and isinstance(inst, MongoModelBase):
-            raw_value = inst._data.get(self.attname, self.default)
-            if self.is_blank(raw_value):
-                return raw_value
-            python = self.to_python(raw_value)
-            # Cache retrieved value.
-            self.__set__(inst, python)
-            return python
+            try:
+                return inst._data.get_python_value(
+                    self.attname, self.to_python)
+            except KeyError:
+                return self.default
         return self

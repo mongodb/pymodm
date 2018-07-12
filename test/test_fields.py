@@ -89,8 +89,6 @@ class FieldsTestCase(ODMTestCase):
 
     def test_field_encoding_decoding(self):
         from decimal import Decimal
-        import ipdb as pdb
-        pdb.set_trace()
         Simple2(qty=Decimal("1.23")).save()
         # Get the object twice.
         _ = Simple2.objects.get()
