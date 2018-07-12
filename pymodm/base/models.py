@@ -20,7 +20,7 @@ from pymodm.base.options import MongoOptions
 from pymodm.common import (
     register_document, get_document, validate_mapping,
     validate_list_tuple_or_none, validate_boolean_or_none,
-    validate_boolean, snake_case)
+    validate_boolean, snake_case, _DEFAULT)
 from pymodm.compat import with_metaclass
 from pymodm.context_managers import no_auto_dereference
 from pymodm.errors import ValidationError, InvalidModel, OperationError
@@ -623,9 +623,16 @@ class LazyDecoder(object):
         return (self._mongo_data == other._mongo_data and
                 self._python_data == other._python_data)
 
-    def pop(self, key, default):
-        return (self._mongo_data.pop(key, default) or
-                self._python_data.pop(key, default))
+    def pop(self, key, default=_DEFAULT):
+        popval = (self._mongo_data.pop(key, None) or
+                  self._python_data.pop(key, None))
+        if popval is not None:
+            self._members.discard(key)
+            return popval
+        elif default != _DEFAULT:
+            return default
+        else:
+            raise KeyError(key)
 
     def clear(self):
         self._mongo_data.clear()

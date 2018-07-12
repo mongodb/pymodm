@@ -34,6 +34,9 @@ _IMPORT_CACHE = {}
 CTS1 = re.compile('(.)([A-Z][a-z]+)')
 CTS2 = re.compile('([a-z0-9])([A-Z])')
 
+# Dummy default value to be used as a sentinel internally.
+_DEFAULT = type('_DEFAULT', (object,), {})()
+
 
 def snake_case(camel_case):
     snake = re.sub(CTS1, r'\1_\2', camel_case)

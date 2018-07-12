@@ -84,9 +84,13 @@ class MongoBaseField(object):
         MongoModelBase = _import('pymodm.base.models.MongoModelBase')
         if inst is not None and isinstance(inst, MongoModelBase):
             try:
-                return inst._data.get_python_value(self.attname, self.to_python)
+                value = inst._data.get_python_value(
+                    self.attname, self.to_python)
             except KeyError:
-                return self._get_default_once(inst)
+                value = self._get_default_once(inst)
+            if not self.is_blank(value):
+                self.__set__(inst, value)
+            return value
         return self
 
     def __set__(self, inst, value):
