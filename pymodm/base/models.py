@@ -628,9 +628,9 @@ class LazyDecoder(object):
                 self._python_data == other._python_data)
 
     def pop(self, key, default=_DEFAULT):
-        popval = (self._mongo_data.pop(key, None) or
-                  self._python_data.pop(key, None))
-        if popval is not None:
+        popval = (self._mongo_data.pop(key, _DEFAULT) or
+                  self._python_data.pop(key, _DEFAULT))
+        if popval is not _DEFAULT:
             self._members.discard(key)
             return popval
         elif default != _DEFAULT:
