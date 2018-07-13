@@ -1175,22 +1175,14 @@ class ReferenceField(RelatedModelFieldsBase):
                                                     name,
                                                     self._on_delete)
 
+    def dereference_field(self, value):
+        # Attempt to dereference the value as an id.
+        dereference_id = _import('pymodm.dereference.dereference_id')
+        return dereference_id(self.related_model, value)
+
     def to_python(self, value):
-        if isinstance(value, dict):
-            # Try to convert the value into our document type.
-            try:
-                return self.related_model.from_document(value)
-            except (ValueError, TypeError):
-                pass
-
-        if isinstance(value, self.related_model):
-            return value
-
-        if self.model._mongometa._auto_dereference:
-            # Attempt to dereference the value as an id.
-            dereference_id = _import('pymodm.dereference.dereference_id')
-            return dereference_id(self.related_model, value)
-
+        # If this is invoked we are converting from the mongo value which is
+        # always just the _id.
         return self.related_model._mongometa.pk.to_python(value)
 
     def to_mongo(self, value):
@@ -1203,11 +1195,28 @@ class ReferenceField(RelatedModelFieldsBase):
         return self.related_model._mongometa.pk.to_mongo(value)
 
     def __get__(self, inst, owner):
+        import ipdb as pdb
+        #pdb.set_trace()
         MongoModelBase = _import('pymodm.base.models.MongoModelBase')
         if inst is not None and isinstance(inst, MongoModelBase):
             try:
-                return inst._data.get_python_value(
+                value = inst._data.get_python_value(
                     self.attname, self.to_python)
             except KeyError:
-                return self.default
+                value = self.default
+            # This is probably not needed
+            # if isinstance(value, dict):
+            #     # Try to convert the value into our document type.
+            #     try:
+            #         return self.related_model.from_document(value)
+            #     except (ValueError, TypeError):
+            #         pass
+            if self.is_blank(value) or isinstance(value, self.related_model):
+                # If we have a fully-initialized model, it must come from the cache,
+                # so we need not update the LazyDecoder.
+                return value
+            if self.model._mongometa._auto_dereference:
+                value = self.dereference_field(value)
+            self.__set__(inst, value)
+            return value
         return self

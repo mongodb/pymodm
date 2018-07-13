@@ -297,9 +297,13 @@ class MongoModelBase(object):
             for field in self._mongometa.get_fields():
                 if field.is_undefined(self):
                     continue
-                son[field.mongo_name] = self._data.get_mongo_value(
-                    field.attname, field.to_mongo
+                value = self._data.get_python_value(
+                    field.attname, field.to_python
                 )
+                if field.is_blank(value):
+                    son[field.mongo_name] = value
+                else:
+                    son[field.mongo_name] = field.to_mongo(value)
         # Add metadata about our type, so that we instantiate the right class
         # when retrieving from MongoDB.
         if not self._mongometa.final:
@@ -643,8 +647,8 @@ class LazyDecoder(object):
         try:
             return self._mongo_data[key]
         except KeyError:
-            pvalue = self._python_data.get(key)
-        if pvalue is None:
+            pvalue = self._python_data.get(key, _DEFAULT)
+        if pvalue is _DEFAULT:
             raise KeyError
         return to_mongo(pvalue)
 
@@ -657,8 +661,8 @@ class LazyDecoder(object):
         try:
             return self._python_data[key]
         except KeyError:
-            mvalue = self._mongo_data.pop(key, None)
-        if mvalue is None:
+            mvalue = self._mongo_data.pop(key, _DEFAULT)
+        if mvalue is _DEFAULT:
             raise KeyError
         pvalue = to_python(mvalue)
         self._python_data[key] = pvalue
