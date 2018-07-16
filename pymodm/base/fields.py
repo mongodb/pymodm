@@ -88,8 +88,6 @@ class MongoBaseField(object):
                     self.attname, self.to_python)
             except KeyError:
                 value = self._get_default_once(inst)
-            if not self.is_blank(value):
-                self.__set__(inst, value)
             return value
         return self
 

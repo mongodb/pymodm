@@ -108,6 +108,8 @@ def _get_reference_document(document_map, collection_name, ref_id):
 
 def _attach_objects_in_path(container, document_map, fields, key, field):
     try:
+        value = container.get_python_value(key, field.to_python)
+    except AttributeError:
         value = container[key]
     except KeyError:
         # there is no value for given key
