@@ -256,7 +256,9 @@ class MongoModelBase(object):
                 self._data.set_mongo_value(
                     self._mongometa.pk.attname, dict[field])
             elif field in field_names:
-                self._data.set_mongo_value(field_names[field], dict[field])
+                to_python = self._mongometa.get_field(field).to_python
+                self._data.set_python_value(
+                    field_names[field], to_python(dict[field]))
             elif not ignore_unknown:
                 raise ValueError(
                     'Unrecognized field name %r' % field)

@@ -119,9 +119,13 @@ def _attach_objects_in_path(container, document_map, fields, key, field):
             not isinstance(value, field.related_model)):
         # value is reference id
         meta = field.related_model._mongometa
-        container[key] = _get_reference_document(document_map,
-                                                 meta.collection_name,
-                                                 meta.pk.to_mongo(value))
+        dereferenced_document = _get_reference_document(
+            document_map, meta.collection_name, meta.pk.to_mongo(value))
+        try:
+            container.set_mongo_value(key, dereferenced_document)
+        except AttributeError:
+            container[key] = field.related_model.from_document(
+                dereferenced_document)
     elif isinstance(field, ListField):
         # value is list
         for idx, item in enumerate(value):
