@@ -804,6 +804,17 @@ class ListField(MongoBaseField):
             field.model = self.model
             field = getattr(field, '_field', None)
 
+    def __get__(self, inst, owner):
+        value = super(ListField, self).__get__(inst, owner)
+        MongoModelBase = _import('pymodm.base.models.MongoModelBase')
+        if inst is not None and isinstance(inst, MongoModelBase):
+            ReferenceField = _import('pymodm.fields.ReferenceField')
+            if isinstance(self._field, ReferenceField):
+                return [
+                    self._field.dereference_if_needed3(v) for v in value
+                ]
+        return value
+
 
 #
 # Geospatial field types.
@@ -1190,6 +1201,18 @@ class ReferenceField(RelatedModelFieldsBase):
             dereference_id = _import('pymodm.dereference.dereference_id')
             return dereference_id(self.related_model, value)
         return self.related_model._mongometa.pk.to_python(value)
+
+    def dereference_if_needed3(self, value):
+        if self.model._mongometa._auto_dereference:
+            if isinstance(value, self.related_model):
+                # Already dereferenced. Return as-is.
+                return value
+            # Else, attempt to dereference the value as an id.
+            dereference_id = _import('pymodm.dereference.dereference_id')
+            return dereference_id(self.related_model, value)
+        if isinstance(value, self.related_model):
+            return self.related_model._mongometa.pk.to_python(value.pk)
+        return value
 
     def to_python(self, value):
         # Attempt casting to referenced model.

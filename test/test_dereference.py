@@ -44,6 +44,8 @@ class DereferenceTestCase(ODMTestCase):
             self.assertEqual(comment.post, post)
 
     def test_list_dereference(self):
+        import ipdb as pdb
+        #pdb.set_trace()
         # Test dereferencing items stored in a ListField(ReferenceField(X))
         class OtherModel(MongoModel):
             name = fields.CharField()
@@ -82,6 +84,8 @@ class DereferenceTestCase(ODMTestCase):
             self.assertIsInstance(comment, Comment)
 
     def test_dereference_fields(self):
+        import ipdb as pdb
+        pdb.set_trace()
         # Test dereferencing only specific fields.
 
         # Contrived Models that contains more than one ReferenceField at
