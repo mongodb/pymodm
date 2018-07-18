@@ -1203,6 +1203,8 @@ class ReferenceField(RelatedModelFieldsBase):
         return self.related_model._mongometa.pk.to_python(value)
 
     def dereference_if_needed3(self, value):
+        if isinstance(value, self.related_model):
+            return value
         if self.model._mongometa._auto_dereference:
             if isinstance(value, self.related_model):
                 # Already dereferenced. Return as-is.
@@ -1210,9 +1212,7 @@ class ReferenceField(RelatedModelFieldsBase):
             # Else, attempt to dereference the value as an id.
             dereference_id = _import('pymodm.dereference.dereference_id')
             return dereference_id(self.related_model, value)
-        if isinstance(value, self.related_model):
-            return self.related_model._mongometa.pk.to_python(value.pk)
-        return value
+        return self.related_model._mongometa.pk.to_python(value)
 
     def to_python(self, value):
         # Attempt casting to referenced model.
@@ -1258,6 +1258,9 @@ class ReferenceField(RelatedModelFieldsBase):
                     return self.related_model.from_document(value)
                 except (ValueError, TypeError):
                     pass
+
+            if isinstance(value, self.related_model):
+                return value
 
             # Else.
             return self.dereference_if_needed(value)
