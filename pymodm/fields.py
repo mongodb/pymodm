@@ -766,7 +766,10 @@ class ListField(MongoBaseField):
         :parameters:
           - `verbose_name`: A human-readable name for the Field.
           - `mongo_name`: The name of this field when stored in MongoDB.
-          - `field`: The Field type of all items in this list.
+          - `field`: The Field type of all items in this list. 
+
+        .. note:: 'field' needs to be an 'Field instance' and not a 
+                  'Field class'
 
         .. seealso:: constructor for
                      :class:`~pymodm.base.fields.MongoBaseField`
