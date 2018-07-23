@@ -45,7 +45,7 @@ class DereferenceTestCase(ODMTestCase):
 
     def test_list_dereference(self):
         import ipdb as pdb
-        #pdb.set_trace()
+        pdb.set_trace()
         # Test dereferencing items stored in a ListField(ReferenceField(X))
         class OtherModel(MongoModel):
             name = fields.CharField()
@@ -57,12 +57,17 @@ class DereferenceTestCase(ODMTestCase):
         m2 = OtherModel('b').save()
         container = Container([m1, m2]).save()
 
+        # Implicit dereferencing.
+        container.refresh_from_db()
+        self.assertEqual([m1, m2], container.one_to_many)
+
         # Force ObjectIds.
         container.refresh_from_db()
         with no_auto_dereference(container):
             for item in container.one_to_many:
                 self.assertIsInstance(item, ObjectId)
 
+        # Explicit dereferencing.
         dereference(container)
         self.assertEqual([m1, m2], container.one_to_many)
 
@@ -84,8 +89,6 @@ class DereferenceTestCase(ODMTestCase):
             self.assertIsInstance(comment, Comment)
 
     def test_dereference_fields(self):
-        import ipdb as pdb
-        pdb.set_trace()
         # Test dereferencing only specific fields.
 
         # Contrived Models that contains more than one ReferenceField at

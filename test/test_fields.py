@@ -80,6 +80,10 @@ class SensibleDecimal(fields.Decimal128Field):
         self.to_mongo_call_count += 1
         return bson.Decimal128(value)
 
+    def reset_counters(self):
+        self.to_python_call_count = 0
+        self.to_mongo_call_count = 0
+
 
 class Simple2(MongoModel):
     qty = SensibleDecimal()
@@ -89,11 +93,24 @@ class FieldsTestCase(ODMTestCase):
 
     def test_field_encoding_decoding(self):
         from decimal import Decimal
-        Simple2(qty=Decimal("1.23")).save()
-        # Get the object twice.
-        _ = Simple2.objects.get()
-        _ = Simple2.objects.get()
+        def _refresh_and_reset(model_instance):
+            model_instance.refresh_from_db()
+            type(model_instance).qty.reset_counters()
+
+        # Test reads from SON.
+        model_instance = Simple2(qty=Decimal("1.23")).save()
+        _refresh_and_reset(model_instance)
+        num_tries = 5
+        for _ in range(num_tries):
+            _ = model_instance.qty
         self.assertEqual(Simple2.qty.to_python_call_count, 1)
+
+        # Test conversion to SON.
+        _refresh_and_reset(model_instance)
+        num_tries = 5
+        for _acc in range(num_tries):
+            _ = model_instance.to_son()
+        self.assertEqual(Simple2.qty.to_mongo_call_count, num_tries)
 
     def test_field_dbname(self):
         self.assertEqual('firstName', Person.first_name.mongo_name)
@@ -291,11 +308,13 @@ class FieldsTestCase(ODMTestCase):
     def test_mutable_default(self):
         class Article(MongoModel):
             tags = fields.ListField(fields.CharField())
+            dict = fields.DictField()
 
         article = Article()
         self.assertIs(article.tags, article.tags)
 
         article.tags.append('foo')
+        self.assertEqual(article.tags, ['foo'])
         article.tags.append('bar')
         self.assertEqual(article.tags, ['foo', 'bar'])
 

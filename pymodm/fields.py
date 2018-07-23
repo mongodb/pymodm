@@ -810,9 +810,11 @@ class ListField(MongoBaseField):
         if inst is not None and isinstance(inst, MongoModelBase):
             ReferenceField = _import('pymodm.fields.ReferenceField')
             if isinstance(self._field, ReferenceField):
-                return [
+                value = [
                     self._field.dereference_if_needed3(v) for v in value
                 ]
+            if not self.is_blank(value):
+                self.__set__(inst, value)
         return value
 
 
@@ -1215,6 +1217,10 @@ class ReferenceField(RelatedModelFieldsBase):
         return self.related_model._mongometa.pk.to_python(value)
 
     def to_python(self, value):
+        # Default/blank values can be returned immediately.
+        if self.is_blank(value):
+            return value
+
         # Attempt casting to referenced model.
         if isinstance(value, dict):
             try:
