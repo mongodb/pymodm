@@ -403,7 +403,7 @@ class MongoModelBase(object):
             if fields_self != fields_other:
                 return False
             for fname in fields_self:
-                if getattr(self, fname) != other(self, fname):
+                if getattr(self, fname) != getattr(other, fname):
                     return False
             return True
         return NotImplemented

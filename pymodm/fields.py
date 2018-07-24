@@ -387,13 +387,17 @@ class FileField(MongoBaseField):
     def __get__(self, inst, owner):
         MongoModelBase = _import('pymodm.base.models.MongoModelBase')
         if inst is not None and isinstance(inst, MongoModelBase):
-            raw_value = inst._data.get(self.attname, self.default)
+            try:
+                raw_value = inst._data.get_python_value(
+                    self.attname, self.to_python)
+            except KeyError:
+                raw_value = self.default
             if self.is_blank(raw_value):
                 return raw_value
             # Turn whatever value we have into a FieldFile instance.
-            _file = self._to_field_file(inst._data[self.attname], inst)
+            _file = self._to_field_file(raw_value, inst)
             # Store this transformed value back into the instance.
-            inst._data[self.attname] = _file
+            inst._data.set_python_value(self.attname, _file)
             return self.to_python(_file)
         # Access from outside a Model instance.
         return self
@@ -1073,6 +1077,9 @@ class EmbeddedDocumentField(RelatedModelFieldsBase):
             value.full_clean()
         self.validators.append(validate_related_model)
 
+    def __set__(self, inst, value):
+        inst._data.set_python_value(self.attname, self.to_python(value))
+
     def to_python(self, value):
         if isinstance(value, dict):
             # Try to convert the value into our document type.
@@ -1117,6 +1124,9 @@ class EmbeddedDocumentListField(RelatedModelFieldsBase):
                         % (v, self.related_model.__name__))
                 v.full_clean()
         self.validators.append(validate_related_model)
+
+    def __set__(self, inst, value):
+        inst._data.set_python_value(self.attname, self.to_python(value))
 
     def to_python(self, value):
         return [self.related_model.from_document(item)

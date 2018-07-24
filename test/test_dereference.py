@@ -44,8 +44,6 @@ class DereferenceTestCase(ODMTestCase):
             self.assertEqual(comment.post, post)
 
     def test_list_dereference(self):
-        import ipdb as pdb
-        pdb.set_trace()
         # Test dereferencing items stored in a ListField(ReferenceField(X))
         class OtherModel(MongoModel):
             name = fields.CharField()
