@@ -12,7 +12,9 @@ env:
     - MONGODB=3.0.14
     - MONGODB=3.2.12
     - MONGODB=3.4.3
-    - MONGODB=3.5.5
+    - MONGODB=3.6.6
+    - MONDODB=4.0.0
+    - MONDODB=4.1.1
 
 matrix:
   fast_finish: true
