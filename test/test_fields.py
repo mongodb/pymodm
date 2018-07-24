@@ -15,6 +15,8 @@
 import datetime
 import re
 
+from decimal import Decimal
+
 import bson
 
 from pymodm import fields, MongoModel
@@ -65,20 +67,20 @@ class Student2d(Person):
     )
 
 
-class SensibleDecimal(fields.Decimal128Field):
+class FloatDecimal(fields.FloatField):
     """ Toy class to test field encoding/decoding behavior."""
     def __init__(self, *args, **kwargs):
         self.to_python_call_count = 0
         self.to_mongo_call_count = 0
-        super(SensibleDecimal, self).__init__(*args, **kwargs)
+        super(FloatDecimal, self).__init__(*args, **kwargs)
 
     def to_python(self, value):
         self.to_python_call_count += 1
-        return value.to_decimal()
+        return Decimal(value)
 
     def to_mongo(self, value):
         self.to_mongo_call_count += 1
-        return bson.Decimal128(value)
+        return float(value)
 
     def reset_counters(self):
         self.to_python_call_count = 0
@@ -86,13 +88,12 @@ class SensibleDecimal(fields.Decimal128Field):
 
 
 class Simple2(MongoModel):
-    qty = SensibleDecimal()
+    qty = FloatDecimal()
 
 
 class FieldsTestCase(ODMTestCase):
 
     def test_field_encoding_decoding(self):
-        from decimal import Decimal
         def _refresh_and_reset(model_instance):
             model_instance.refresh_from_db()
             type(model_instance).qty.reset_counters()
