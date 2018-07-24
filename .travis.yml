@@ -9,10 +9,12 @@ python:
 env:
   matrix:
     - MONGODB=2.6.12
-    - MONGODB=3.0.14
-    - MONGODB=3.2.12
-    - MONGODB=3.4.3
-    - MONGODB=3.5.5
+    - MONGODB=3.0.15
+    - MONGODB=3.2.20
+    - MONGODB=3.4.16
+    - MONGODB=3.6.6
+    - MONGODB=4.0.0
+    - MONGODB=4.1.1
 
 matrix:
   fast_finish: true
