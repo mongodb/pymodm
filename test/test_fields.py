@@ -309,7 +309,6 @@ class FieldsTestCase(ODMTestCase):
     def test_mutable_default(self):
         class Article(MongoModel):
             tags = fields.ListField(fields.CharField())
-            dict = fields.DictField()
 
         article = Article()
         self.assertIs(article.tags, article.tags)
