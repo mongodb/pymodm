@@ -20,7 +20,7 @@ from itertools import chain
 
 from bson.decimal128 import Decimal128
 
-from pymodm.base.models import LazyDecoder
+from pymodm.base.models import _LazyDecoder
 
 
 PYTHON_DATA = {
@@ -35,7 +35,7 @@ MONGO_DATA = {
 
 class TestLazyDecoder(unittest.TestCase):
     def setUp(self):
-        self.ld = LazyDecoder()
+        self.ld = _LazyDecoder()
         self.populate_lazy_decoder(self.ld)
 
     def tearDown(self):
@@ -50,7 +50,7 @@ class TestLazyDecoder(unittest.TestCase):
     def test_clear(self):
         self.ld.clear()
 
-        self.assertEqual(self.ld, LazyDecoder())
+        self.assertEqual(self.ld, _LazyDecoder())
         self.assertEqual(sum(1 for _ in self.ld), 0)
 
     def test_iter(self):
@@ -65,7 +65,7 @@ class TestLazyDecoder(unittest.TestCase):
             self.assertIn(item, expected_members)
 
     def test_eq(self):
-        ld2 = LazyDecoder()
+        ld2 = _LazyDecoder()
         self.populate_lazy_decoder(ld2)
         self.assertEqual(self.ld, ld2)
 

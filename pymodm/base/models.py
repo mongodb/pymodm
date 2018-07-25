@@ -186,7 +186,7 @@ class MongoModelBase(object):
 
     def __init__(self, *args, **kwargs):
         # Initialize dicts for saving python/mongo field values.
-        self._data = LazyDecoder()
+        self._data = _LazyDecoder()
 
         # Initialize dict for saving field default values.
         self._defaults = {}
@@ -603,7 +603,7 @@ class EmbeddedMongoModel(with_metaclass(MongoModelMetaclass, MongoModelBase)):
     pass
 
 
-class LazyDecoder(object):
+class _LazyDecoder(object):
     def __init__(self):
         self._mongo_data = {}
         self._python_data = {}
