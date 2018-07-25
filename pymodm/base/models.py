@@ -396,16 +396,7 @@ class MongoModelBase(object):
 
     def __eq__(self, other):
         if isinstance(other, MongoModelBase):
-            if self._data == other._data:
-                return True
-            fields_self = set(iter(self))
-            fields_other = set(iter(other))
-            if fields_self != fields_other:
-                return False
-            for fname in fields_self:
-                if getattr(self, fname) != getattr(other, fname):
-                    return False
-            return True
+            return self._data == other._data
         return NotImplemented
 
 
