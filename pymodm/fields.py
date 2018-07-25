@@ -815,7 +815,7 @@ class ListField(MongoBaseField):
             ReferenceField = _import('pymodm.fields.ReferenceField')
             if isinstance(self._field, ReferenceField):
                 value = [
-                    self._field.dereference_if_needed3(v) for v in value
+                    self._field.dereference_if_needed(v) for v in value
                 ]
             if not self.is_blank(value):
                 self.__set__(inst, value)
@@ -1199,29 +1199,10 @@ class ReferenceField(RelatedModelFieldsBase):
                                                     self._on_delete)
 
     def dereference_if_needed(self, value):
-        if self.model._mongometa._auto_dereference:
-            if isinstance(value, self.related_model):
-                # Already dereferenced. Return as-is.
-                return value
-            # Else, attempt to dereference the value as an id.
-            dereference_id = _import('pymodm.dereference.dereference_id')
-            return dereference_id(self.related_model, value)
-        return value
-
-    def dereference_if_needed2(self, value):
-        if self.model._mongometa._auto_dereference:
-            dereference_id = _import('pymodm.dereference.dereference_id')
-            return dereference_id(self.related_model, value)
-        return self.related_model._mongometa.pk.to_python(value)
-
-    def dereference_if_needed3(self, value):
         if isinstance(value, self.related_model):
             return value
         if self.model._mongometa._auto_dereference:
-            if isinstance(value, self.related_model):
-                # Already dereferenced. Return as-is.
-                return value
-            # Else, attempt to dereference the value as an id.
+            # Attempt to dereference the value as an id.
             dereference_id = _import('pymodm.dereference.dereference_id')
             return dereference_id(self.related_model, value)
         return self.related_model._mongometa.pk.to_python(value)
@@ -1238,12 +1219,8 @@ class ReferenceField(RelatedModelFieldsBase):
             except (ValueError, TypeError):
                 pass
 
-        # Already a Python value.
-        if isinstance(value, self.related_model):
-            return value
-
-        # Else/Finally.
-        return self.dereference_if_needed2(value)
+        # Finally.
+        return self.dereference_if_needed(value)
 
     def to_mongo(self, value):
         if isinstance(value, self.related_model):
@@ -1274,9 +1251,6 @@ class ReferenceField(RelatedModelFieldsBase):
                     return self.related_model.from_document(value)
                 except (ValueError, TypeError):
                     pass
-
-            if isinstance(value, self.related_model):
-                return value
 
             # Else.
             return self.dereference_if_needed(value)
