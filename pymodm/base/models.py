@@ -619,8 +619,12 @@ class LazyDecoder(object):
         return iter(self._members)
 
     def __eq__(self, other):
-        return (self._mongo_data == other._mongo_data and
-                self._python_data == other._python_data)
+        if self._members != other._members:
+            return False
+        for key in self:
+            if self._get_raw_value(key) != other._get_raw_value(key):
+                return False
+        return True
 
     def pop(self, key, default=_DEFAULT):
         popval = (self._mongo_data.pop(key, _DEFAULT) or
@@ -637,6 +641,12 @@ class LazyDecoder(object):
         self._mongo_data.clear()
         self._python_data.clear()
         self._members.clear()
+
+    def _get_raw_value(self, key):
+        try:
+            return self._python_data[key]
+        except KeyError:
+            return self._mongo_data[key]
 
     def get_mongo_value(self, key, to_mongo):
         try:
