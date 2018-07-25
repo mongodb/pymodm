@@ -152,7 +152,7 @@ class TopLevelMongoModelMetaclass(MongoModelMetaclass):
 
         # Conceptually the same as 'if new_class is MongoModelBase'.
         if not hasattr(new_class, '_mongometa'):
-           return new_class
+            return new_class
 
         # Check for a primary key field. If there isn't one, put one there.
         if new_class._mongometa.pk is None:
