@@ -222,14 +222,13 @@ class DereferenceTestCase(ODMTestCase):
         container.refresh_from_db()
         dereference(container)
 
-        # access through raw dicts not through __get__ of the field
-        # cause __get__ can perform a query to db for reference fields
-        # to dereference them using dereference_id function
-        # Not sure how this check translates now that we have the LazyDecoder.
-        # self.assertEqual(
-        #     container._data['lst'][0]._data['ref']['name'],
-        #     'Aaron')
+        # Disable dereferencing and check for dereferenced values.
+        with no_auto_dereference(container):
+            self.assertEqual(
+                container.lst[0].ref.name, 'Aaron'
 
+            )
+        # Ensure dereferenced values during normal access.
         self.assertEqual(container.lst[0].ref.name, 'Aaron')
 
     def test_embedded_reference_dereference(self):
