@@ -104,14 +104,14 @@ class TestLazyDecoder(unittest.TestCase):
     def test_get_python_data_as_mongo_value(self):
         ldcopy = copy.deepcopy(self.ld)
         key = next(iter(self.ld._python_data))
-        def _to_python(value):
-            _to_python.call_count +=1
+        def _to_mongo(value):
+            _to_mongo.call_count +=1
             return str.upper(value)
-        _to_python.call_count = 0
-        value = self.ld.get_mongo_value(key, _to_python)
+        _to_mongo.call_count = 0
+        value = self.ld.get_mongo_value(key, _to_mongo)
 
-        self.assertEqual(_to_python.call_count, 1)
-        self.assertEqual(value, _to_python(self.ld._python_data[key]))
+        self.assertEqual(_to_mongo.call_count, 1)
+        self.assertEqual(value, _to_mongo(self.ld._python_data[key]))
         self.assertEqual(self.ld, ldcopy)
 
     def test_get_mongo_data_as_python_value(self):
