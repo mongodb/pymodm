@@ -30,7 +30,6 @@ if PY3:
     string_types = str,
     text_type = str
     integer_types = int
-    truth_value_method_name = '__bool__'
 
     def reraise(exctype, value, trace=None):
         raise exctype(str(value)).with_traceback(trace)
@@ -38,7 +37,6 @@ else:
     string_types = basestring,
     text_type = unicode
     integer_types = (int, long)
-    truth_value_method_name = '__nonzero__'
 
     exec("""def reraise(exctype, value, trace=None):
     raise exctype, str(value), trace

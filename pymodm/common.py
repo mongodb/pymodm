@@ -21,7 +21,7 @@ import pymongo
 
 from pymodm.errors import ModelDoesNotExist
 
-from pymodm.compat import string_types, truth_value_method_name
+from pymodm.compat import string_types
 
 
 # Mapping of class names to class objects.
@@ -33,14 +33,6 @@ _IMPORT_CACHE = {}
 
 CTS1 = re.compile('(.)([A-Z][a-z]+)')
 CTS2 = re.compile('([a-z0-9])([A-Z])')
-
-# Dummy default value to be used as a sentinel internally.
-# The sentinel's truth value evaluates to False.
-_default_cls = type(
-    '_default_cls', (object,),
-    {truth_value_method_name: (lambda x: False)}
-)
-_DEFAULT = _default_cls()
 
 
 def snake_case(camel_case):

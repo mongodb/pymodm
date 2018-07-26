@@ -20,7 +20,7 @@ from pymodm.base.options import MongoOptions
 from pymodm.common import (
     register_document, get_document, validate_mapping,
     validate_list_tuple_or_none, validate_boolean_or_none,
-    validate_boolean, snake_case, _DEFAULT)
+    validate_boolean, snake_case)
 from pymodm.compat import with_metaclass
 from pymodm.context_managers import no_auto_dereference
 from pymodm.errors import ValidationError, InvalidModel, OperationError
