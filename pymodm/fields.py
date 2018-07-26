@@ -814,9 +814,8 @@ class ListField(MongoBaseField):
         if inst is not None and isinstance(inst, MongoModelBase):
             ReferenceField = _import('pymodm.fields.ReferenceField')
             if isinstance(self._field, ReferenceField):
-                value = [
-                    self._field.dereference_if_needed(v) for v in value
-                ]
+                # Modify list in-place to avoid invalidating existing refs.
+                value[:] = self.to_python(value)[:]
             if not self.is_blank(value):
                 self.__set__(inst, value)
         return value
@@ -1237,12 +1236,8 @@ class ReferenceField(RelatedModelFieldsBase):
         return self.related_model._mongometa.pk.to_mongo(value)
 
     def __get__(self, inst, owner):
+        value = super(ReferenceField, self).__get__(inst, owner)
         MongoModelBase = _import('pymodm.base.models.MongoModelBase')
         if inst is not None and isinstance(inst, MongoModelBase):
-            try:
-                value = inst._data.get_python_value(
-                    self.attname, self.to_python)
-            except KeyError:
-                value = self.default
             return self.to_python(value)
         return self
