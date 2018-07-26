@@ -95,7 +95,7 @@ class MongoBaseField(object):
         inst._data.set_python_value(self.attname, value)
 
     def __delete__(self, inst):
-        inst._data.pop(self.attname, None)
+        inst._data.remove(self.attname)
         inst._defaults.pop(self.attname, None)
 
     def get_default(self):
