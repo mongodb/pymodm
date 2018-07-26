@@ -1199,12 +1199,16 @@ class ReferenceField(RelatedModelFieldsBase):
                                                     self._on_delete)
 
     def dereference_if_needed(self, value):
+        # Already dereferenced values can be returned immediately.
         if isinstance(value, self.related_model):
             return value
+
+        # Attempt to dereference the value as an id.
         if self.model._mongometa._auto_dereference:
-            # Attempt to dereference the value as an id.
             dereference_id = _import('pymodm.dereference.dereference_id')
             return dereference_id(self.related_model, value)
+
+        # Else.
         return self.related_model._mongometa.pk.to_python(value)
 
     def to_python(self, value):
@@ -1219,7 +1223,7 @@ class ReferenceField(RelatedModelFieldsBase):
             except (ValueError, TypeError):
                 pass
 
-        # Finally.
+        # Else.
         return self.dereference_if_needed(value)
 
     def to_mongo(self, value):
@@ -1228,6 +1232,7 @@ class ReferenceField(RelatedModelFieldsBase):
                 raise ValidationError(
                     'Referenced Models must be saved to the database first.')
             return value._mongometa.pk.to_mongo(value.pk)
+
         # Assume value is some form of the _id.
         return self.related_model._mongometa.pk.to_mongo(value)
 
@@ -1239,19 +1244,5 @@ class ReferenceField(RelatedModelFieldsBase):
                     self.attname, self.to_python)
             except KeyError:
                 value = self.default
-
-            # Default/blank values can be returned immediately.
-            if self.is_blank(value):
-                return value
-
-            # If dereferencing externally.
-            if isinstance(value, dict):
-                # Try to convert the value into our document type.
-                try:
-                    return self.related_model.from_document(value)
-                except (ValueError, TypeError):
-                    pass
-
-            # Else.
-            return self.dereference_if_needed(value)
+            return self.to_python(value)
         return self
