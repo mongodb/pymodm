@@ -38,9 +38,6 @@ class TestLazyDecoder(unittest.TestCase):
         self.ld = _LazyDecoder()
         self.populate_lazy_decoder(self.ld)
 
-    def tearDown(self):
-        del self.ld
-
     def populate_lazy_decoder(self, ld):
         for key in PYTHON_DATA:
             ld.set_python_value(key, PYTHON_DATA[key])
