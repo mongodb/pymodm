@@ -1207,7 +1207,6 @@ class ReferenceField(RelatedModelFieldsBase):
             dereference_id = _import('pymodm.dereference.dereference_id')
             return dereference_id(self.related_model, value)
 
-        # Else.
         return self.related_model._mongometa.pk.to_python(value)
 
     def to_python(self, value):
@@ -1222,7 +1221,6 @@ class ReferenceField(RelatedModelFieldsBase):
             except (ValueError, TypeError):
                 pass
 
-        # Else.
         return self.dereference_if_needed(value)
 
     def to_mongo(self, value):
