@@ -55,12 +55,17 @@ class DereferenceTestCase(ODMTestCase):
         m2 = OtherModel('b').save()
         container = Container([m1, m2]).save()
 
+        # Implicit dereferencing.
+        container.refresh_from_db()
+        self.assertEqual([m1, m2], container.one_to_many)
+
         # Force ObjectIds.
         container.refresh_from_db()
         with no_auto_dereference(container):
             for item in container.one_to_many:
                 self.assertIsInstance(item, ObjectId)
 
+        # Explicit dereferencing.
         dereference(container)
         self.assertEqual([m1, m2], container.one_to_many)
 
@@ -124,7 +129,6 @@ class DereferenceTestCase(ODMTestCase):
 
     def test_auto_dereference(self):
         # Test automatic dereferencing.
-
         post = Post(title='This is a post.').save()
         comments = [
             Comment('comment 1', post).save(),
@@ -218,13 +222,13 @@ class DereferenceTestCase(ODMTestCase):
         container.refresh_from_db()
         dereference(container)
 
-        # access through raw dicts not through __get__ of the field
-        # cause __get__ can perform a query to db for reference fields
-        # to dereference them using dereference_id function
-        self.assertEqual(
-            container._data['lst'][0]._data['ref']['name'],
-            'Aaron')
+        # Disable dereferencing and check for dereferenced values.
+        with no_auto_dereference(container):
+            self.assertEqual(
+                container.lst[0].ref.name, 'Aaron'
 
+            )
+        # Ensure dereferenced values during normal access.
         self.assertEqual(container.lst[0].ref.name, 'Aaron')
 
     def test_embedded_reference_dereference(self):

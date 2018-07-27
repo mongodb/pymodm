@@ -283,7 +283,10 @@ class Decimal128Field(MongoBaseField):
 
         def validate_min_and_max(value):
             # Turn value into a Decimal.
-            value = value.to_decimal()
+            if isinstance(value, Decimal128):
+                value = value.to_decimal()
+            elif not isinstance(value, decimal.Decimal):
+                value = decimal.Decimal(value)
             validators.validator_for_min_max(min_value, max_value)(value)
 
         self.validators.append(
@@ -384,13 +387,17 @@ class FileField(MongoBaseField):
     def __get__(self, inst, owner):
         MongoModelBase = _import('pymodm.base.models.MongoModelBase')
         if inst is not None and isinstance(inst, MongoModelBase):
-            raw_value = inst._data.get(self.attname, self.default)
+            try:
+                raw_value = inst._data.get_python_value(
+                    self.attname, self.to_python)
+            except KeyError:
+                raw_value = self.default
             if self.is_blank(raw_value):
                 return raw_value
             # Turn whatever value we have into a FieldFile instance.
-            _file = self._to_field_file(inst._data[self.attname], inst)
+            _file = self._to_field_file(raw_value, inst)
             # Store this transformed value back into the instance.
-            inst._data[self.attname] = _file
+            inst._data.set_python_value(self.attname, _file)
             return self.to_python(_file)
         # Access from outside a Model instance.
         return self
@@ -802,6 +809,18 @@ class ListField(MongoBaseField):
             field.model = self.model
             field = getattr(field, '_field', None)
 
+    def __get__(self, inst, owner):
+        value = super(ListField, self).__get__(inst, owner)
+        MongoModelBase = _import('pymodm.base.models.MongoModelBase')
+        if inst is not None and isinstance(inst, MongoModelBase):
+            ReferenceField = _import('pymodm.fields.ReferenceField')
+            if isinstance(self._field, ReferenceField):
+                # Modify list in-place to avoid invalidating existing refs.
+                value[:] = self.to_python(value)[:]
+            if not self.is_blank(value):
+                self.__set__(inst, value)
+        return value
+
 
 #
 # Geospatial field types.
@@ -1058,6 +1077,9 @@ class EmbeddedDocumentField(RelatedModelFieldsBase):
             value.full_clean()
         self.validators.append(validate_related_model)
 
+    def __set__(self, inst, value):
+        inst._data.set_python_value(self.attname, self.to_python(value))
+
     def to_python(self, value):
         if isinstance(value, dict):
             # Try to convert the value into our document type.
@@ -1102,6 +1124,9 @@ class EmbeddedDocumentListField(RelatedModelFieldsBase):
                         % (v, self.related_model.__name__))
                 v.full_clean()
         self.validators.append(validate_related_model)
+
+    def __set__(self, inst, value):
+        inst._data.set_python_value(self.attname, self.to_python(value))
 
     def to_python(self, value):
         return [self.related_model.from_document(item)
@@ -1173,23 +1198,31 @@ class ReferenceField(RelatedModelFieldsBase):
                                                     name,
                                                     self._on_delete)
 
+    def dereference_if_needed(self, value):
+        # Already dereferenced values can be returned immediately.
+        if isinstance(value, self.related_model):
+            return value
+
+        # Attempt to dereference the value as an id.
+        if self.model._mongometa._auto_dereference:
+            dereference_id = _import('pymodm.dereference.dereference_id')
+            return dereference_id(self.related_model, value)
+
+        return self.related_model._mongometa.pk.to_python(value)
+
     def to_python(self, value):
+        # Default/blank values can be returned immediately.
+        if self.is_blank(value):
+            return value
+
+        # Attempt casting to referenced model.
         if isinstance(value, dict):
-            # Try to convert the value into our document type.
             try:
                 return self.related_model.from_document(value)
             except (ValueError, TypeError):
                 pass
 
-        if isinstance(value, self.related_model):
-            return value
-
-        if self.model._mongometa._auto_dereference:
-            # Attempt to dereference the value as an id.
-            dereference_id = _import('pymodm.dereference.dereference_id')
-            return dereference_id(self.related_model, value)
-
-        return self.related_model._mongometa.pk.to_python(value)
+        return self.dereference_if_needed(value)
 
     def to_mongo(self, value):
         if isinstance(value, self.related_model):
@@ -1197,17 +1230,13 @@ class ReferenceField(RelatedModelFieldsBase):
                 raise ValidationError(
                     'Referenced Models must be saved to the database first.')
             return value._mongometa.pk.to_mongo(value.pk)
+
         # Assume value is some form of the _id.
         return self.related_model._mongometa.pk.to_mongo(value)
 
     def __get__(self, inst, owner):
+        value = super(ReferenceField, self).__get__(inst, owner)
         MongoModelBase = _import('pymodm.base.models.MongoModelBase')
         if inst is not None and isinstance(inst, MongoModelBase):
-            raw_value = inst._data.get(self.attname, self.default)
-            if self.is_blank(raw_value):
-                return raw_value
-            python = self.to_python(raw_value)
-            # Cache retrieved value.
-            self.__set__(inst, python)
-            return python
+            return self.to_python(value)
         return self

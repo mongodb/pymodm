@@ -185,8 +185,9 @@ class MongoModelBase(object):
     """Base class for MongoModel and EmbeddedMongoModel."""
 
     def __init__(self, *args, **kwargs):
-        # Initialize dict for saving field values.
-        self._data = {}
+        # Initialize dicts for saving python/mongo field values.
+        self._data = _LazyDecoder()
+
         # Initialize dict for saving field default values.
         self._defaults = {}
 
@@ -252,9 +253,11 @@ class MongoModelBase(object):
             if '_cls' == field:
                 continue
             elif '_id' == field and not self._mongometa.implicit_id:
-                setattr(self, self._mongometa.pk.attname, dict[field])
+                self._data.set_mongo_value(
+                    self._mongometa.pk.attname, dict[field])
             elif field in field_names:
-                setattr(self, field_names[field], dict[field])
+                self._data.set_mongo_value(
+                    field_names[field], dict[field])
             elif not ignore_unknown:
                 raise ValueError(
                     'Unrecognized field name %r' % field)
@@ -295,11 +298,13 @@ class MongoModelBase(object):
             for field in self._mongometa.get_fields():
                 if field.is_undefined(self):
                     continue
-                raw_value = self._data.get(field.attname)
-                if field.is_blank(raw_value):
-                    son[field.mongo_name] = raw_value
+                value = self._data.get_python_value(
+                    field.attname, field.to_python
+                )
+                if field.is_blank(value):
+                    son[field.mongo_name] = value
                 else:
-                    son[field.mongo_name] = field.to_mongo(raw_value)
+                    son[field.mongo_name] = field.to_mongo(value)
         # Add metadata about our type, so that we instantiate the right class
         # when retrieving from MongoDB.
         if not self._mongometa.final:
@@ -596,3 +601,66 @@ class MongoModel(
 class EmbeddedMongoModel(with_metaclass(MongoModelMetaclass, MongoModelBase)):
     """Base class for models that represent embedded documents."""
     pass
+
+
+class _LazyDecoder(object):
+    def __init__(self):
+        self._mongo_data = {}
+        self._python_data = {}
+        self._members = set()
+
+    def __contains__(self, item):
+        return item in self._members
+
+    def __iter__(self):
+        return iter(self._members)
+
+    def __eq__(self, other):
+        if self._members != other._members:
+            return False
+        for key in self:
+            if self._get_raw_value(key) != other._get_raw_value(key):
+                return False
+        return True
+
+    def remove(self, key):
+        self._mongo_data.pop(key, None)
+        self._python_data.pop(key, None)
+        self._members.discard(key)
+
+    def clear(self):
+        self._mongo_data.clear()
+        self._python_data.clear()
+        self._members.clear()
+
+    def _get_raw_value(self, key):
+        try:
+            return self._python_data[key]
+        except KeyError:
+            return self._mongo_data[key]
+
+    def get_mongo_value(self, key, to_mongo):
+        try:
+            return self._mongo_data[key]
+        except KeyError:
+            pvalue = self._python_data[key]
+            return to_mongo(pvalue)
+
+    def set_mongo_value(self, key, value):
+        self._python_data.pop(key, None)
+        self._mongo_data[key] = value
+        self._members.add(key)
+
+    def get_python_value(self, key, to_python):
+        try:
+            return self._python_data[key]
+        except KeyError:
+            mvalue = self._mongo_data.pop(key)
+            pvalue = to_python(mvalue)
+            self._python_data[key] = pvalue
+            return pvalue
+
+    def set_python_value(self, key, value):
+        self._mongo_data.pop(key, None)
+        self._python_data[key] = value
+        self._members.add(key)
