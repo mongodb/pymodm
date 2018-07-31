@@ -22,14 +22,6 @@ class ModelWithFile(MongoModel):
     secondary_upload = FileField(required=False)
 
 
-class ModelWithFileNoConnection(MongoModel):
-    upload = FileField()
-    secondary_upload = FileField(required=False)
-
-    class Meta:
-        connection_alias = 'test-field-file-no-connection'
-
-
 # Test another Storage type.
 class LocalFileSystemStorage(Storage):
     """A Storage implementation that saves to a local folder.
@@ -180,22 +172,25 @@ class FileFieldAlternateStorageTestCase(FieldTestCase, FileFieldTestMixin):
 class FileFieldGridFSNoConnectionTestCase(FieldTestCase):
     testfile = os.path.join(TEST_FILE_ROOT, 'testfile.txt')
     file_metadata = {'contentType': 'text/python'}
-    model = ModelWithFileNoConnection
 
     def test_lazy_storage_initialization(self):
-        connection_alias = self.model.Meta.connection_alias
+        conn_alias = 'test-field-file-no-connection'
+        class ModelWithFileNoConnection(MongoModel):
+            upload = FileField()
+            class Meta:
+                connection_alias = conn_alias
+
         with open(self.testfile) as this_file:
-            model = self.model(
+            model = ModelWithFileNoConnection(
                 File(this_file, 'new', metadata=self.file_metadata),
-                File(this_file, 'old', metadata=self.file_metadata)
             )
 
             # With no connection, an exception should be thrown.
             with self.assertRaisesRegex(
                     ValidationError, "No such alias {!r}".format(
-                        connection_alias)):
+                        conn_alias)):
                 model.save()
 
             # Should succeed once connection is created.
-            connect_to_test_DB(connection_alias)
+            connect_to_test_DB(conn_alias)
             model.save()
