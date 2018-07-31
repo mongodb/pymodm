@@ -387,6 +387,10 @@ class FileField(MongoBaseField):
     def __get__(self, inst, owner):
         MongoModelBase = _import('pymodm.base.models.MongoModelBase')
         if inst is not None and isinstance(inst, MongoModelBase):
+            if self.storage is None:
+                gridfs = GridFSBucket(
+                    _get_db(self.model._mongometa.connection_alias))
+                self.storage = GridFSStorage(gridfs)
             try:
                 raw_value = inst._data.get_python_value(
                     self.attname, self.to_python)
@@ -401,12 +405,6 @@ class FileField(MongoBaseField):
             return self.to_python(_file)
         # Access from outside a Model instance.
         return self
-
-    def contribute_to_class(self, cls, name):
-        super(FileField, self).contribute_to_class(cls, name)
-        gridfs = GridFSBucket(_get_db(self.model._mongometa.connection_alias))
-        # Default GridFS storage.
-        self.storage = self.storage or GridFSStorage(gridfs)
 
 
 class ImageField(FileField):

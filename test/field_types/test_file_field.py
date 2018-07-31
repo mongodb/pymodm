@@ -6,8 +6,11 @@ from test import DB
 from test.field_types import FieldTestCase
 
 from pymodm import MongoModel
+from pymodm.errors import ValidationError
 from pymodm.fields import FileField
 from pymodm.files import File, Storage
+
+from test import connect_to_test_DB
 
 
 TEST_FILE_ROOT = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'lib')
@@ -17,6 +20,14 @@ UPLOADS = os.path.join(TEST_FILE_ROOT, 'uploads')
 class ModelWithFile(MongoModel):
     upload = FileField()
     secondary_upload = FileField(required=False)
+
+
+class ModelWithFileNoConnection(MongoModel):
+    upload = FileField()
+    secondary_upload = FileField(required=False)
+
+    class Meta:
+        connection_alias = 'test-field-file-no-connection'
 
 
 # Test another Storage type.
@@ -164,3 +175,27 @@ class FileFieldAlternateStorageTestCase(FieldTestCase, FileFieldTestMixin):
             shutil.rmtree(UPLOADS)
         except OSError:
             pass
+
+
+class FileFieldGridFSNoConnectionTestCase(FieldTestCase):
+    testfile = os.path.join(TEST_FILE_ROOT, 'testfile.txt')
+    file_metadata = {'contentType': 'text/python'}
+    model = ModelWithFileNoConnection
+
+    def test_lazy_storage_initialization(self):
+        connection_alias = self.model.Meta.connection_alias
+        with open(self.testfile) as this_file:
+            model = self.model(
+                File(this_file, 'new', metadata=self.file_metadata),
+                File(this_file, 'old', metadata=self.file_metadata)
+            )
+
+            # With no connection, an exception should be thrown.
+            with self.assertRaisesRegex(
+                    ValidationError, "No such alias {!r}".format(
+                        connection_alias)):
+                model.save()
+
+            # Should succeed once connection is created.
+            connect_to_test_DB(connection_alias)
+            model.save()
