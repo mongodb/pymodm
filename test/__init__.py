@@ -28,8 +28,6 @@ MONGO_URI = os.environ.get('MONGO_URI', 'mongodb://localhost:27017')
 CLIENT = pymongo.MongoClient(MONGO_URI)
 DB = CLIENT.odm_test
 
-connect('%s/%s' % (MONGO_URI, DB.name))
-
 # Get the version of MongoDB.
 server_info = pymongo.MongoClient(MONGO_URI).server_info()
 MONGO_VERSION = tuple(server_info.get('versionArray', []))
@@ -37,6 +35,16 @@ MONGO_VERSION = tuple(server_info.get('versionArray', []))
 
 INVALID_MONGO_NAMES = ['$dollar', 'has.dot', 'null\x00character']
 VALID_MONGO_NAMES = ['', 'dollar$', 'forty-two']
+
+
+def connect_to_test_DB(alias=None):
+    if alias is None:
+        connect('%s/%s' % (MONGO_URI, DB.name))
+    else:
+        connect('%s/%s' % (MONGO_URI, DB.name), alias=alias)
+
+
+connect_to_test_DB()
 
 
 class ODMTestCase(unittest.TestCase):
