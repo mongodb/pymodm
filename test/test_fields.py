@@ -93,6 +93,20 @@ class Simple2(MongoModel):
 
 class FieldsTestCase(ODMTestCase):
 
+    def test_auto_generate_primary_key(self):
+        class AutoGeneratePrimaryKeyDefaultCallable(MongoModel):
+            identifier = fields.ObjectIdField(
+                primary_key=True, default=bson.ObjectId)
+            data = fields.CharField()
+        model = AutoGeneratePrimaryKeyDefaultCallable(data="some data")
+        model.save()
+
+    def test_commit_required_field_with_default(self):
+        class RequiredFieldWithDefault(MongoModel):
+            age = fields.IntegerField(default=10, required=True)
+        model = RequiredFieldWithDefault()
+        model.save()
+
     def test_field_encoding_decoding(self):
         def _refresh_and_reset(model_instance):
             model_instance.refresh_from_db()
