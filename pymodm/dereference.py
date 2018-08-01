@@ -14,7 +14,7 @@
 
 from collections import defaultdict, deque
 
-from pymodm.base.models import MongoModelBase
+from pymodm.base.models import MongoModelBase, TopLevelMongoModel
 from pymodm.connection import _get_db
 from pymodm.context_managers import no_auto_dereference
 from pymodm.fields import ReferenceField, ListField, EmbeddedDocumentListField
@@ -61,6 +61,9 @@ def _find_references_in_object(object, field, reference_map, fields=None):
             field = field._field
         for item in object:
             _find_references_in_object(item, field, reference_map, fields)
+    elif isinstance(object, TopLevelMongoModel):
+        # Already dereferenced model.
+        return
     elif isinstance(object, MongoModelBase):
         _find_references(object, reference_map, fields)
     # else:  doesn't matter...
@@ -115,17 +118,20 @@ def _attach_objects_in_path(container, document_map, fields, key, field):
         # there is no value for given key
         return
 
-    if (isinstance(field, ReferenceField) and
-            not isinstance(value, field.related_model)):
-        # value is reference id
-        meta = field.related_model._mongometa
-        dereferenced_document = _get_reference_document(
-            document_map, meta.collection_name, meta.pk.to_mongo(value))
-        try:
-            container.set_mongo_value(key, dereferenced_document)
-        except AttributeError:
-            container[key] = field.related_model.from_document(
-                dereferenced_document)
+    if isinstance(field, ReferenceField):
+        if isinstance(value, field.related_model):
+            # already de-referenced. do nothing
+            pass
+        else:
+            # value is reference id
+            meta = field.related_model._mongometa
+            dereferenced_document = _get_reference_document(
+                document_map, meta.collection_name, meta.pk.to_mongo(value))
+            try:
+                container.set_mongo_value(key, dereferenced_document)
+            except AttributeError:
+                container[key] = field.related_model.from_document(
+                    dereferenced_document)
     elif isinstance(field, ListField):
         # value is list
         for idx, item in enumerate(value):
@@ -148,6 +154,7 @@ def _attach_objects(model_instance, document_map, fields=None):
         for idx, field in enumerate(fields):
             if field:
                 field_names_map[idx] = field.popleft()
+        # field_names_map = [field.popleft() for field in fields]
         field_names = set(field_names_map.values())
 
     for field in model_instance._mongometa.get_fields():
@@ -177,6 +184,9 @@ def dereference(model_instance, fields=None):
     """
     # Map of collection name --> list of ids to retrieve from the collection.
     reference_map = defaultdict(list)
+
+    import ipdb as pdb
+    #pdb.set_trace()
 
     # Fields may be nested (dot-notation). Split each field into its parts.
     if fields:

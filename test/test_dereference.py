@@ -88,6 +88,8 @@ class DereferenceTestCase(ODMTestCase):
 
     def test_dereference_fields(self):
         # Test dereferencing only specific fields.
+        import ipdb as pdb
+        #pdb.set_trace()
 
         # Contrived Models that contains more than one ReferenceField at
         # different levels of nesting.
@@ -303,17 +305,26 @@ class DereferenceTestCase(ODMTestCase):
 
         post = Post(title='title').save()
         comment = Comment(body='Comment Body', post=post).save()
-
         container = CommentContainer(ref=comment).save()
 
         with no_auto_dereference(comment), no_auto_dereference(container):
+            # Refresh references.
             comment.refresh_from_db()
             container.refresh_from_db()
-            container.ref = comment
-            self.assertEqual(container.ref.post, 'title')
+
+            # Before dereferencing.
+            self.assertEqual(container.ref, comment.pk)
+
+            # After dereferencing. This only dereferences fields on container.
+            dereference(container)
+            self.assertEqual(container.ref, comment)
+            self.assertEqual(container.ref.post, post.pk)
+
+            # After dereferencing comment explicitly.
+            dereference(container.ref)
+            self.assertEqual(container.ref.post, post)
+
+            # Repeated dereferencing doesn't have any effect.
             dereference(container)
             self.assertIsInstance(container.ref.post, Post)
-            self.assertEqual(container.ref.post.title, 'title')
-            dereference(container)
-            self.assertIsInstance(container.ref.post, Post)
-            self.assertEqual(container.ref.post.title, 'title')
+            self.assertEqual(container.ref.post.title, post.title)
