@@ -185,9 +185,6 @@ def dereference(model_instance, fields=None):
     # Map of collection name --> list of ids to retrieve from the collection.
     reference_map = defaultdict(list)
 
-    import ipdb as pdb
-    #pdb.set_trace()
-
     # Fields may be nested (dot-notation). Split each field into its parts.
     if fields:
         fields = [deque(field.split('.')) for field in fields]
