@@ -88,9 +88,6 @@ class DereferenceTestCase(ODMTestCase):
 
     def test_dereference_fields(self):
         # Test dereferencing only specific fields.
-        import ipdb as pdb
-        #pdb.set_trace()
-
         # Contrived Models that contains more than one ReferenceField at
         # different levels of nesting.
         class MultiReferenceModelEmbed(MongoModel):
@@ -298,6 +295,38 @@ class DereferenceTestCase(ODMTestCase):
             comment.refresh_from_db()
             dereference(comment)
             self.assertIsNone(comment.post)
+
+    def test_dereference_circular_reference(self):
+        class Person(MongoModel):
+            name = fields.CharField()
+            friends = fields.ListField(fields.ReferenceField('Person'))
+            emergency_contact = fields.ReferenceField('Person')
+
+        person1 = Person(name="Bob").save()
+        person2 = Person(name="Joe").save()
+
+        person1.friends.append(person2)
+        person1.emergency_contact = person2
+        person1.save()
+
+        person2.friends.append(person1)
+        person2.emergency_contact = person1
+        person2.save()
+
+        with no_auto_dereference(person1):
+            # Refresh documents.
+            person1.refresh_from_db()
+            person2.refresh_from_db()
+
+            # Before dereferencing.
+            self.assertEqual(person1.friends[0], person2.pk)
+            self.assertEqual(person1.emergency_contact, person2.pk)
+
+            # After dereferencing.
+            dereference(person1)
+            self.assertEqual(person1.emergency_contact.name, person2.name)
+            self.assertEqual(person1.friends[0].name, person2.name)
+            self.assertEqual(person1.friends[0].friends, [person1.pk])
 
     def test_dereference_dereferenced_reference(self):
         class CommentContainer(MongoModel):
