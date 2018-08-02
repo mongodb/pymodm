@@ -96,6 +96,8 @@ in MongoDB. A few things to notice here:
 .. seealso:: The :mod:`~pymodm.fields` module.
 .. seealso:: The list of available :ref:`metadata attributes <metadata-attributes>`.
 
+.. _GettingStartedReferenceExample:
+
 Models that Reference Other Models
 ..................................
 
