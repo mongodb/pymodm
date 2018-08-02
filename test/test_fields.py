@@ -127,6 +127,13 @@ class FieldsTestCase(ODMTestCase):
             _ = model_instance.to_son()
         self.assertEqual(Simple2.qty.to_mongo_call_count, num_tries)
 
+    def test_field_is_set_as_mongo_value(self):
+        model = Simple2()
+        model.qty = Decimal("1.23")
+        self.assertEqual(model.qty, Decimal("1.23"))
+        model.qty = "1.23"
+        self.assertEqual(model.qty, Decimal("1.23"))
+
     def test_field_dbname(self):
         self.assertEqual('firstName', Person.first_name.mongo_name)
         Person(email='han@site.com', first_name='Han').save()
