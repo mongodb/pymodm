@@ -1158,7 +1158,7 @@ class ReferenceField(RelatedModelFieldsBase):
         """
         :parameters:
           - `model`: The class of :class:`~pymodm.MongoModel` that this field
-            references.
+            references or the name of the model as a string.
           - `on_delete`: The action to take (if any) when the referenced object
             is deleted. The delete rule should be one of the following:
             * :attr:`ReferenceField.DO_NOTHING` (default).
@@ -1171,6 +1171,19 @@ class ReferenceField(RelatedModelFieldsBase):
 
         .. seealso:: constructor for
                      :class:`~pymodm.base.fields.MongoBaseField`
+
+        example::
+
+            class User(MongoModel):
+                name = fields.CharField()
+                # Reference the current model by passing the name as a string.
+                friend = fields.ReferenceField('User')
+
+            class Post(MongoModel):
+                title = fields.CharField()
+                author = fields.ReferenceField(User)
+
+        .. seealso:: :ref:`GettingStartedReferenceExample`.
         """
         super(ReferenceField, self).__init__(model=model,
                                              verbose_name=verbose_name,
