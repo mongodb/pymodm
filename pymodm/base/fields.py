@@ -94,7 +94,7 @@ class MongoBaseField(object):
         return self
 
     def __set__(self, inst, value):
-        inst._data.set_python_value(self.attname, value)
+        inst._data.set_mongo_value(self.attname, value)
 
     def __delete__(self, inst):
         inst._data.remove(self.attname)
@@ -168,6 +168,8 @@ class MongoBaseField(object):
                 return
             else:
                 raise ValidationError('must not be blank (was: %r)' % value)
+
+        value = self.to_python(value)
 
         if self.choices:
             self._validate_choices(value)

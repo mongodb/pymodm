@@ -283,10 +283,7 @@ class Decimal128Field(MongoBaseField):
 
         def validate_min_and_max(value):
             # Turn value into a Decimal.
-            if isinstance(value, Decimal128):
-                value = value.to_decimal()
-            elif not isinstance(value, decimal.Decimal):
-                value = decimal.Decimal(value)
+            value = value.to_decimal()
             validators.validator_for_min_max(min_value, max_value)(value)
 
         self.validators.append(
@@ -1075,9 +1072,6 @@ class EmbeddedDocumentField(RelatedModelFieldsBase):
             value.full_clean()
         self.validators.append(validate_related_model)
 
-    def __set__(self, inst, value):
-        inst._data.set_python_value(self.attname, self.to_python(value))
-
     def to_python(self, value):
         if isinstance(value, dict):
             # Try to convert the value into our document type.
@@ -1122,9 +1116,6 @@ class EmbeddedDocumentListField(RelatedModelFieldsBase):
                         % (v, self.related_model.__name__))
                 v.full_clean()
         self.validators.append(validate_related_model)
-
-    def __set__(self, inst, value):
-        inst._data.set_python_value(self.attname, self.to_python(value))
 
     def to_python(self, value):
         return [self.related_model.from_document(item)
