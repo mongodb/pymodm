@@ -644,6 +644,8 @@ class _LazyDecoder(object):
             return self._mongo_data[key]
         except KeyError:
             pvalue = self._python_data[key]
+            if pvalue is None:
+                return pvalue
             return to_mongo(pvalue)
 
     def set_mongo_value(self, key, value):
@@ -656,6 +658,9 @@ class _LazyDecoder(object):
             return self._python_data[key]
         except KeyError:
             mvalue = self._mongo_data.pop(key)
+            if mvalue is None:
+                self._python_data[key] = mvalue
+                return mvalue
             pvalue = to_python(mvalue)
             self._python_data[key] = pvalue
             return pvalue
