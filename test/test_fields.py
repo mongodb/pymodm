@@ -268,6 +268,8 @@ class FieldsTestCase(ODMTestCase):
         inst.name = None
         inst.save()
         self.assertIsNone(DB.simple.find_one()['name'])
+        inst.refresh_from_db()
+        self.assertIsNone(inst.name)
 
     def test_simple_required(self):
         class SimpleRequired(MongoModel):
