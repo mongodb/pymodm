@@ -90,7 +90,7 @@ class DereferenceTestCase(ODMTestCase):
         # Test dereferencing only specific fields.
         # Contrived Models that contains more than one ReferenceField at
         # different levels of nesting.
-        class MultiReferenceModelEmbed(MongoModel):
+        class MultiReferenceModelEmbed(EmbeddedMongoModel):
             comments = fields.ListField(fields.ReferenceField(Comment))
             posts = fields.ListField(fields.ReferenceField(Post))
 
