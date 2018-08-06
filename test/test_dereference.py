@@ -341,7 +341,13 @@ class DereferenceTestCase(ODMTestCase):
             comment.refresh_from_db()
             container.refresh_from_db()
 
+            # Test behavior on assignment to reference field.
+            container.ref = comment
+            self.assertEqual(container.ref.body, comment.body)
+            self.assertEqual(container.ref.post, comment.post)
+
             # Before dereferencing.
+            container.refresh_from_db()
             self.assertEqual(container.ref, comment.pk)
 
             # After dereferencing. This only dereferences fields on container.
