@@ -297,13 +297,13 @@ class DereferenceTestCase(ODMTestCase):
             self.assertIsNone(comment.post)
 
     def test_dereference_circular_reference(self):
-        class Person(MongoModel):
+        class NewPerson(MongoModel):
             name = fields.CharField()
-            friends = fields.ListField(fields.ReferenceField('Person'))
-            emergency_contact = fields.ReferenceField('Person')
+            friends = fields.ListField(fields.ReferenceField('NewPerson'))
+            emergency_contact = fields.ReferenceField('NewPerson')
 
-        person1 = Person(name="Bob").save()
-        person2 = Person(name="Joe").save()
+        person1 = NewPerson(name="Bob").save()
+        person2 = NewPerson(name="Joe").save()
 
         person1.friends.append(person2)
         person1.emergency_contact = person2
