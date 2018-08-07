@@ -38,6 +38,5 @@ class ListFieldTestCase(FieldTestCase):
         # Initializing ListField with field type raises exception.
         with self.assertRaisesRegex(
                 ValueError,
-                "field must be an instance of MongoBaseField"
-        ):
+                "field must be an instance of MongoBaseField"):
             _ = ListField(CharField)

@@ -781,8 +781,8 @@ class ListField(MongoBaseField):
 
         if not isinstance(field, MongoBaseField):
             raise ValueError(
-                'field must be an instance of MongoBaseField, not %s' % (field,)
-            )
+                'field must be an instance of MongoBaseField, '
+                'not %s' % (field,))
 
         self._field = field
 

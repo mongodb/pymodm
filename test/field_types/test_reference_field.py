@@ -1,4 +1,4 @@
-# Copyright 2016 MongoDB, Inc.
+# Copyright 2018 MongoDB, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,8 +28,7 @@ class ReferenceFieldTestCase(FieldTestCase):
         dummy = DummyReferenceModel(data='hello')
         with self.assertRaisesRegex(
                 ValueError,
-                "model must be a Model class or a string"
-        ):
+                "model must be a Model class or a string"):
             _ = ReferenceField(dummy)
 
         # Initializing ReferenceField with a model class is OK.
