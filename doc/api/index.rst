@@ -29,6 +29,7 @@ Model Fields
 ------------
 
 .. autoclass:: pymodm.base.fields.MongoBaseField
+   :members:
 
 .. automodule:: pymodm.fields
    :members:

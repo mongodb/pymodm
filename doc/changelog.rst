@@ -1,6 +1,24 @@
 Changelog
 =========
 
+Version 0.4.1
+-------------
+
+This release includes a number of bug-fixes and improvements:
+
+* Improve documentation.
+* Improved support defining models before calling
+  :meth:`~pymodm.connection.connect`.
+* A field's :meth:`~pymodm.base.fields.MongoBaseField.to_python` method is no
+  longer called on every access. It is only called on the first access after a
+  call to :meth:`~pymodm.MongoModel.refresh_from_db` or, on the
+  first access after a field is set.
+* Fixed bug when appending to an empty :class:`~pymodm.fields.ListField`.
+
+For full list of the issues resolved in this release, visit
+https://jira.mongodb.org/secure/ReleaseNote.jspa?projectId=13381&version=18194.
+
+
 Version 0.4.0
 -------------
 
