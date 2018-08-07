@@ -27,8 +27,16 @@ class RegularExpressionFieldTestCase(FieldTestCase):
     pattern = re.compile('hello', re.UNICODE)
     regex = Regex.from_native(pattern)
 
+    def assertPatternEquals(self, reg1, reg2):
+        """Assert two compiled regular expression pattern objects are equal."""
+        self.assertEqual(reg1.pattern, reg2.pattern)
+        self.assertEqual(reg1.flags, reg2.flags)
+
     def test_to_python(self):
-        self.assertEqual(self.pattern, self.field.to_python(self.pattern))
+        self.assertPatternEquals(
+            self.pattern, self.field.to_python(self.pattern))
+        self.assertPatternEquals(
+            self.pattern, self.field.to_python(self.regex))
 
     def test_to_mongo(self):
         self.assertEqual(self.regex, self.field.to_mongo(self.regex))
