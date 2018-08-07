@@ -235,7 +235,7 @@ class RelatedModelFieldsBase(MongoBaseField):
                 (isinstance(model, type) and
                  issubclass(model, MongoModelBase))):
             raise ValueError('model must be a Model class or a string, not %s'
-                             % model.__class__.__name__)
+                             % model)
 
     @property
     def related_model(self):
