@@ -768,7 +768,7 @@ class ListField(MongoBaseField):
         :parameters:
           - `verbose_name`: A human-readable name for the Field.
           - `mongo_name`: The name of this field when stored in MongoDB.
-          - `field`: The Field type of all items in this list.
+          - `field`: The Field instance of all items in this list.
             This needs to be an *instance* of a `MongoBaseField` subclass.
 
         .. seealso:: constructor for
@@ -778,6 +778,12 @@ class ListField(MongoBaseField):
         super(ListField, self).__init__(verbose_name=verbose_name,
                                         mongo_name=mongo_name,
                                         **kwargs)
+
+        if not isinstance(field, MongoBaseField):
+            raise ValueError(
+                'field must be an instance of MongoBaseField, not %s' % (field,)
+            )
+
         self._field = field
 
         def validate_items(items):
