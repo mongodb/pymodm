@@ -56,7 +56,7 @@ setup(
     name='pymodm',
     version=VERSION,
     author='Luke Lovett',
-    author_email='luke.lovett@{nospam}mongodb.com',
+    author_email='mongodb-user@googlegroups.com',
     license='Apache License, Version 2.0',
     include_package_data=True,
     description='PyMODM is a generic ODM on top of PyMongo.',
