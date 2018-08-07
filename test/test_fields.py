@@ -324,7 +324,7 @@ class FieldsTestCase(ODMTestCase):
 
         # Default that is an empty value.
         class CallableEmptyValue(MongoModel):
-            list_of_things = fields.ListField()
+            list_of_things = fields.ListField(fields.CharField())
 
         inst = CallableEmptyValue().save()
         self.assertNotIn('list_of_things', DB.callable_empty_value.find_one())
