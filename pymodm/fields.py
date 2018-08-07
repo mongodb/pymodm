@@ -779,7 +779,7 @@ class ListField(MongoBaseField):
                                         mongo_name=mongo_name,
                                         **kwargs)
 
-        if not isinstance(field, MongoBaseField):
+        if field is not None and not isinstance(field, MongoBaseField):
             raise ValueError(
                 'field must be an instance of MongoBaseField, '
                 'not %s' % (field,))

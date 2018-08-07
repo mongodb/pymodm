@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from pymodm import MongoModel
 from pymodm.errors import ValidationError
 from pymodm.fields import ListField, IntegerField, CharField
 
@@ -33,6 +34,16 @@ class ListFieldTestCase(FieldTestCase):
 
     def test_get_default(self):
         self.assertEqual([], self.field.get_default())
+
+    def test_generic_list_field(self):
+        class MyModel(MongoModel):
+            data = ListField()
+
+        mydata = [1, 'hello', {'a': 1}]
+        mymodel = MyModel(data=mydata).save()
+        mymodel.refresh_from_db()
+
+        self.assertEqual(mymodel.data, mydata)
 
     def test_field_validation_on_initialization(self):
         # Initializing ListField with field type raises exception.
