@@ -513,7 +513,10 @@ class GenericIPAddressField(MongoBaseField):
 
 
 class URLField(MongoBaseField):
-    """A field that stores URLs."""
+    """A field that stores URLs.
+
+    This field only accepts 'http', 'https', 'ftp' and 'ftps' URL schemes.
+    """
     SCHEMES = set(['http', 'https', 'ftp', 'ftps'])
     DOMAIN_PATTERN = re.compile(
         '(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+'
