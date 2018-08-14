@@ -563,7 +563,7 @@ class MongoModel(
 
     The following metadata attributes are available:
 
-      - `connection_alias`: The alias of the connection to use for the moel.
+      - `connection_alias`: The alias of the connection to use for the model.
       - `collection_name`: The name of the collection to use. By default, this
         is the same name as the model, converted to snake case.
       - `codec_options`: An instance of
