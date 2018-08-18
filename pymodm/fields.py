@@ -48,7 +48,9 @@ except ImportError:
 
 
 from pymodm import validators
-from pymodm.base.fields import RelatedModelFieldsBase, GeoJSONField
+from pymodm.base.fields import (RelatedModelFieldsBase,
+                                GeoJSONField,
+                                RelatedEmbeddedModelFieldsBase)
 from pymodm.common import _import, validate_mongo_keys
 from pymodm.compat import text_type, string_types, PY3
 from pymodm.connection import _get_db
@@ -1054,7 +1056,7 @@ class GeometryCollectionField(MongoBaseField):
 # RelatedModelField types.
 #
 
-class EmbeddedDocumentField(RelatedModelFieldsBase):
+class EmbeddedDocumentField(RelatedEmbeddedModelFieldsBase):
     """A field that stores a document inside another document."""
 
     def __init__(self, model,
@@ -1091,7 +1093,7 @@ class EmbeddedDocumentField(RelatedModelFieldsBase):
         return self._model_to_document(value)
 
 
-class EmbeddedDocumentListField(RelatedModelFieldsBase):
+class EmbeddedDocumentListField(RelatedEmbeddedModelFieldsBase):
     """A field that stores a list of documents within a document.
 
     All documents in the list must be of the same type.
