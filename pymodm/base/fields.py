@@ -267,6 +267,39 @@ class RelatedModelFieldsBase(MongoBaseField):
             '%s is not a valid %s' % (value, self.related_model.__name__))
 
 
+class RelatedEmbeddedModelFieldsBase(RelatedModelFieldsBase):
+    """Base class for EmbeddedDocument and EmbeddedDocumentListField."""
+
+    def __init__(self, model, verbose_name=None, mongo_name=None, **kwargs):
+        super(RelatedEmbeddedModelFieldsBase,
+              self).__init__(model=model,
+                             verbose_name=verbose_name,
+                             mongo_name=mongo_name,
+                             **kwargs)
+        self.__model = model
+        self.__related_model = None
+
+        EmbeddedMongoModel = _import('pymodm.base.models.EmbeddedMongoModel')
+        if not (isinstance(model, string_types) or
+                (isinstance(model, type) and
+                 issubclass(model, EmbeddedMongoModel))):
+            raise ValueError('model must be a EmbeddedMongoModel class or a '
+                             'string, not %s' % model)
+
+    @property
+    def related_model(self):
+        if not self.__related_model:
+            EmbeddedMongoModel = _import(
+                'pymodm.base.models.EmbeddedMongoModel')
+            if isinstance(self.__model, string_types):
+                self.__related_model = get_document(self.__model)
+            # 'issubclass' complains if first argument is not a class.
+            elif (isinstance(self.__model, type) and
+                  issubclass(self.__model, EmbeddedMongoModel)):
+                self.__related_model = self.__model
+        return self.__related_model
+
+
 class GeoJSONField(MongoBaseField):
     """Base class for GeoJSON fields."""
 

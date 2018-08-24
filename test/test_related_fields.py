@@ -194,3 +194,22 @@ class RelatedFieldsTestCase(ODMTestCase):
         comment = Comment(body='this is a comment', post=post_id).save()
         comment.refresh_from_db()
         self.assertEqual('this is a post', comment.post.body)
+
+    def test_validate_embedded_model(self):
+        msg = 'model must be a EmbeddedMongoModel'
+
+        with self.assertRaisesRegex(ValueError, msg):
+            class Review(MongoModel):
+                text = fields.CharField()
+
+            class Blog(MongoModel):
+                name = fields.CharField()
+                reviews = fields.EmbeddedDocumentField(Review)
+
+        with self.assertRaisesRegex(ValueError, msg):
+            class Review(MongoModel):
+                text = fields.CharField()
+
+            class Blog(MongoModel):
+                name = fields.CharField()
+                reviews = fields.EmbeddedDocumentListField(Review)
