@@ -15,7 +15,7 @@ from bson import SON
 
 from pymodm import EmbeddedMongoModel
 from pymodm.errors import ValidationError
-from pymodm.fields import EmbeddedDocumentField, CharField
+from pymodm.fields import EmbeddedModelField, CharField
 
 from test.field_types import FieldTestCase
 
@@ -27,9 +27,9 @@ class EmbeddedDocument(EmbeddedMongoModel):
         final = True
 
 
-class EmbeddedDocumentFieldTestCase(FieldTestCase):
+class EmbeddedModelFieldTestCase(FieldTestCase):
 
-    field = EmbeddedDocumentField(EmbeddedDocument)
+    field = EmbeddedModelField(EmbeddedDocument)
 
     def test_to_python(self):
         value = self.field.to_python({'name': 'Bob'})

@@ -127,7 +127,7 @@ Let's take a look at a couple examples of some models that reference the
         author = fields.ReferenceField(User)
         revised_on = fields.DateTimeField()
         content = fields.CharField()
-        comments = fields.EmbeddedDocumentListField(Comment)
+        comments = fields.EmbeddedModelListField(Comment)
 
 Here we've defined two additional model types: ``Comment`` and ``Post``. These
 two models demonstrate the two approaches discussed earlier: both ``Comment``
@@ -140,7 +140,7 @@ that field earlier.
 
 ``Post`` gets a little more interesting. In order to support commenting on a
 ``Post``, what we've done is added a ``comments`` field, which is an
-:class:`~pymodm.fields.EmbeddedDocumentListField`. This represents the second
+:class:`~pymodm.fields.EmbeddedModelListField`. This represents the second
 approach we discussed, where ``Comment`` objects are embedded directly into our
 ``Post`` object. The downside to doing this is that it is difficult to
 query for individual ``Comment`` objects. The upside is that we won't have to
@@ -355,7 +355,7 @@ published, but it's going to get annoying *fast* if we have to include
         author = fields.ReferenceField(User)
         revised_on = fields.DateTimeField()
         content = fields.CharField()
-        comments = fields.EmbeddedDocumentListField(Comment)
+        comments = fields.EmbeddedModelListField(Comment)
         published = fields.BooleanField(default=False)
 
 There are two ways we can easily access only those Posts which aren't
@@ -397,7 +397,7 @@ use this ``QuerySet`` type from our model::
         author = fields.ReferenceField(User)
         revised_on = fields.DateTimeField()
         content = fields.CharField()
-        comments = fields.EmbeddedDocumentListField(Comment)
+        comments = fields.EmbeddedModelListField(Comment)
         published = fields.BooleanField(default=False)
 
         # Change the "objects" manager to use our own Manager, which returns
@@ -443,7 +443,7 @@ Then, as before, we add this Manager to their MongoModel::
         author = fields.ReferenceField(User)
         revised_on = fields.DateTimeField()
         content = fields.CharField()
-        comments = fields.EmbeddedDocumentListField(Comment)
+        comments = fields.EmbeddedModelListField(Comment)
         published = fields.BooleanField(default=False)
 
         # Change the "objects" manager to use our own PostManager.

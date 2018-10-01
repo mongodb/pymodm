@@ -24,7 +24,7 @@ class Badge(EmbeddedMongoModel):
 class User(MongoModel):
     fname = fields.CharField()
     friend = fields.ReferenceField('test.test_context_managers.User')
-    badges = fields.EmbeddedDocumentListField(Badge)
+    badges = fields.EmbeddedModelListField(Badge)
 
 
 class ContextManagersTestCase(ODMTestCase):

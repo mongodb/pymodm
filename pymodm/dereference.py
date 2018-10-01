@@ -17,7 +17,7 @@ from collections import defaultdict, deque
 from pymodm.base.models import MongoModelBase
 from pymodm.connection import _get_db
 from pymodm.context_managers import no_auto_dereference
-from pymodm.fields import ReferenceField, ListField, EmbeddedDocumentListField
+from pymodm.fields import ReferenceField, ListField, EmbeddedModelListField
 
 
 class _ObjectMap(dict):
@@ -131,7 +131,7 @@ def _attach_objects_in_path(container, document_map, fields, key, field):
         for idx, item in enumerate(value):
             _attach_objects_in_path(value, document_map, fields,
                                     idx, field._field)
-    elif isinstance(field, EmbeddedDocumentListField):
+    elif isinstance(field, EmbeddedModelListField):
         # value is list of embedded models instances
         for emb_model_inst in value:
             _attach_objects(emb_model_inst, document_map, fields)

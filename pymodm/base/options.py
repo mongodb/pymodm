@@ -18,7 +18,7 @@ from bson.codec_options import CodecOptions
 
 from pymodm.connection import _get_db, DEFAULT_CONNECTION_ALIAS
 from pymodm.errors import InvalidModel
-from pymodm.fields import EmbeddedDocumentField, EmbeddedDocumentListField
+from pymodm.fields import EmbeddedModelField, EmbeddedModelListField, RelatedEmbeddedModelFieldsBase
 
 # Attributes that can be user-specified in MongoOptions.
 DEFAULT_NAMES = (
@@ -76,8 +76,7 @@ class MongoOptions(object):
     def auto_dereference(self, auto_dereference):
         """Turn automatic dereferencing on or off."""
         for field in self.get_fields():
-            if isinstance(field, (EmbeddedDocumentField,
-                                  EmbeddedDocumentListField)):
+            if isinstance(field, (RelatedEmbeddedModelFieldsBase)):
                 embedded_options = field.related_model._mongometa
                 embedded_options.auto_dereference = auto_dereference
         self._auto_dereference = auto_dereference
