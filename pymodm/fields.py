@@ -19,6 +19,7 @@ import decimal
 import ipaddress
 import re
 import uuid
+import warnings
 from collections import OrderedDict
 
 from gridfs import GridFSBucket
@@ -68,7 +69,8 @@ __all__ = [
     'DictField', 'OrderedDictField', 'ListField', 'PointField',
     'LineStringField', 'PolygonField', 'MultiPointField',
     'MultiLineStringField', 'MultiPolygonField', 'GeometryCollectionField',
-    'EmbeddedDocumentField', 'EmbeddedDocumentListField', 'ReferenceField'
+    'EmbeddedDocumentField', 'EmbeddedDocumentListField', 'ReferenceField',
+    'EmbeddedModelField', 'EmbeddedModelListField'
 ]
 
 
@@ -1055,11 +1057,9 @@ class GeometryCollectionField(MongoBaseField):
 # RelatedModelField types.
 #
 
-class EmbeddedDocumentField(RelatedEmbeddedModelFieldsBase):
-    """A field that stores a document inside another document."""
-
-    def __init__(self, model,
-                 verbose_name=None, mongo_name=None, **kwargs):
+class EmbeddedModelField(RelatedEmbeddedModelFieldsBase):
+    """A field that stores an embedded model."""
+    def __init__(self, model, verbose_name=None, mongo_name=None, **kwargs):
         """
         :parameters:
           - `model`: A :class:`~pymodm.EmbeddedMongoModel`, or the name of one,
@@ -1070,10 +1070,11 @@ class EmbeddedDocumentField(RelatedEmbeddedModelFieldsBase):
         .. seealso:: constructor for
                      :class:`~pymodm.base.fields.MongoBaseField`
         """
-        super(EmbeddedDocumentField, self).__init__(model=model,
-                                                    verbose_name=verbose_name,
-                                                    mongo_name=mongo_name,
-                                                    **kwargs)
+        super(EmbeddedModelField, self).__init__(
+            model=model,
+            verbose_name=verbose_name,
+            mongo_name=mongo_name,
+            **kwargs)
 
         def validate_related_model(value):
             if not isinstance(value, self.related_model):
@@ -1092,12 +1093,24 @@ class EmbeddedDocumentField(RelatedEmbeddedModelFieldsBase):
         return self._model_to_document(value)
 
 
-class EmbeddedDocumentListField(RelatedEmbeddedModelFieldsBase):
-    """A field that stores a list of documents within a document.
+class EmbeddedDocumentField(EmbeddedModelField):
+    """**DEPRECATED**: A field that stores an embedded model."""
+    def __init__(self, model, verbose_name=None, mongo_name=None, **kwargs):
+        warnings.warn('EmbeddedDocumentField is deprecated. Use '
+                      'EmbeddedModelField instead.', DeprecationWarning,
+                      stacklevel=2)
+        super(EmbeddedDocumentField, self).__init__(
+            model=model,
+            verbose_name=verbose_name,
+            mongo_name=mongo_name,
+            **kwargs)
+
+
+class EmbeddedModelListField(RelatedEmbeddedModelFieldsBase):
+    """A field that stores a list of embedded models.
 
     All documents in the list must be of the same type.
     """
-
     def __init__(self, model, verbose_name=None, mongo_name=None, **kwargs):
         """
         :parameters:
@@ -1110,7 +1123,7 @@ class EmbeddedDocumentListField(RelatedEmbeddedModelFieldsBase):
                      :class:`~pymodm.base.fields.MongoBaseField`
         """
         kwargs.setdefault('default', list)
-        super(EmbeddedDocumentListField, self).__init__(
+        super(EmbeddedModelListField, self).__init__(
             model=model,
             verbose_name=verbose_name,
             mongo_name=mongo_name,
@@ -1134,6 +1147,23 @@ class EmbeddedDocumentListField(RelatedEmbeddedModelFieldsBase):
 
     def to_mongo(self, value):
         return [self._model_to_document(doc) for doc in value]
+
+
+class EmbeddedDocumentListField(EmbeddedModelListField):
+    """**DEPRECATED**: A field that stores a list of embedded models.
+
+    All documents in the list must be of the same type.
+    """
+
+    def __init__(self, model, verbose_name=None, mongo_name=None, **kwargs):
+        warnings.warn('EmbeddedDocumentListField is deprecated. Use '
+                      'EmbeddedModelListField instead.', DeprecationWarning,
+                      stacklevel=2)
+        super(EmbeddedDocumentListField, self).__init__(
+            model=model,
+            verbose_name=verbose_name,
+            mongo_name=mongo_name,
+            **kwargs)
 
 
 class ReferenceField(RelatedModelFieldsBase):

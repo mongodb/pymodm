@@ -57,7 +57,7 @@ class Post(MongoModel):
     #         post.comments.append(Comment(...))
     #     else:
     #         post.comments = [Comment(...)]
-    comments = fields.EmbeddedDocumentListField(Comment, default=[])
+    comments = fields.EmbeddedModelListField(Comment, default=[])
 
     @property
     def summary(self):

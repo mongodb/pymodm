@@ -14,7 +14,7 @@
 from bson import SON
 
 from pymodm import EmbeddedMongoModel
-from pymodm.fields import EmbeddedDocumentListField, CharField
+from pymodm.fields import EmbeddedModelListField, CharField
 
 from test.field_types import FieldTestCase
 
@@ -26,9 +26,9 @@ class EmbeddedDocument(EmbeddedMongoModel):
         final = True
 
 
-class EmbeddedDocumentFieldTestCase(FieldTestCase):
+class EmbeddedModelFieldTestCase(FieldTestCase):
 
-    field = EmbeddedDocumentListField(EmbeddedDocument)
+    field = EmbeddedModelListField(EmbeddedDocument)
 
     def test_to_python(self):
         # pass a raw list

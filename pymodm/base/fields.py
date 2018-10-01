@@ -268,7 +268,7 @@ class RelatedModelFieldsBase(MongoBaseField):
 
 
 class RelatedEmbeddedModelFieldsBase(RelatedModelFieldsBase):
-    """Base class for EmbeddedDocument and EmbeddedDocumentListField."""
+    """Base class for EmbeddedModel and EmbeddedModelListField."""
 
     def __init__(self, model, verbose_name=None, mongo_name=None, **kwargs):
         super(RelatedEmbeddedModelFieldsBase,

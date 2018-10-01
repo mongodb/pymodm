@@ -118,7 +118,7 @@ Here's a basic example of how to define some models and connect them to MongoDB:
       tags = fields.ListField(fields.CharField(max_length=20))
       # These Comment objects will be stored inside each Post document in the
       # database.
-      comments = fields.EmbeddedDocumentListField('Comment')
+      comments = fields.EmbeddedModelListField('Comment')
 
       class Meta:
           # Text index on content can be used for text search.

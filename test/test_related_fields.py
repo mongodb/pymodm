@@ -13,6 +13,8 @@
 # limitations under the License.
 
 """Test Embedded and Referenced documents."""
+import warnings
+
 from bson.objectid import ObjectId
 
 from pymodm.base import MongoModel, EmbeddedMongoModel
@@ -25,7 +27,7 @@ from test import ODMTestCase, DB
 
 class Contributor(MongoModel):
     name = fields.CharField()
-    thumbnail = fields.EmbeddedDocumentField('Image')
+    thumbnail = fields.EmbeddedModelField('Image')
 
 
 class Image(EmbeddedMongoModel):
@@ -36,7 +38,7 @@ class Image(EmbeddedMongoModel):
 
 class Post(MongoModel):
     body = fields.CharField()
-    images = fields.EmbeddedDocumentListField(Image)
+    images = fields.EmbeddedModelListField(Image)
 
 
 class Comment(MongoModel):
@@ -59,7 +61,7 @@ class RelatedFieldsTestCase(ODMTestCase):
         # No ValidationError raised.
         Comment(post="58b477046e32ab215dca2b57").full_clean()
 
-    def test_validate_embedded_document(self):
+    def test_validate_embedded_model(self):
         with self.assertRaisesRegex(ValidationError, 'field is required'):
             # Image has all fields left blank, which isn't allowed.
             Contributor(name='Mr. Contributor', thumbnail=Image()).save()
@@ -69,7 +71,7 @@ class RelatedFieldsTestCase(ODMTestCase):
                 'alt_text': 'a picture of nothing, since there is no image_url.'
             }).save()
 
-    def test_validate_embedded_document_list(self):
+    def test_validate_embedded_model_list(self):
         with self.assertRaisesRegex(ValidationError, 'field is required'):
             Post(images=[Image(alt_text='Vast, empty space.')]).save()
         with self.assertRaisesRegex(ValidationError, 'field is required'):
@@ -96,7 +98,7 @@ class RelatedFieldsTestCase(ODMTestCase):
             ['Referenced Models must be saved to the database first.'],
             message['post'])
 
-    def test_embedded_document(self):
+    def test_embedded_model(self):
         contr = Contributor(name='Shep')
         # embedded field is not required.
         contr.full_clean()
@@ -109,7 +111,7 @@ class RelatedFieldsTestCase(ODMTestCase):
 
         self.assertEqual(thumb, next(Contributor.objects.all()).thumbnail)
 
-    def test_embedded_document_list(self):
+    def test_embedded_model_list(self):
         images = [
             Image(image_url='/images/kittens.png',
                   alt_text='some kittens'),
@@ -195,21 +197,33 @@ class RelatedFieldsTestCase(ODMTestCase):
         comment.refresh_from_db()
         self.assertEqual('this is a post', comment.post.body)
 
-    def test_validate_embedded_model(self):
+    def test_validate_embedded_model_definition(self):
+        class Review(MongoModel):
+            text = fields.CharField()
+
         msg = 'model must be a EmbeddedMongoModel'
-
         with self.assertRaisesRegex(ValueError, msg):
-            class Review(MongoModel):
-                text = fields.CharField()
-
             class Blog(MongoModel):
                 name = fields.CharField()
-                reviews = fields.EmbeddedDocumentField(Review)
+                reviews = fields.EmbeddedModelField(Review)
 
         with self.assertRaisesRegex(ValueError, msg):
-            class Review(MongoModel):
-                text = fields.CharField()
-
             class Blog(MongoModel):
                 name = fields.CharField()
-                reviews = fields.EmbeddedDocumentListField(Review)
+                reviews = fields.EmbeddedModelListField(Review)
+
+    def test_validate_embedded_document_field_warning(self):
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", DeprecationWarning)
+            class Review(EmbeddedMongoModel):
+                text = fields.CharField()
+
+            with self.assertRaisesRegex(DeprecationWarning, "deprecated"):
+                class Blog(MongoModel):
+                    name = fields.CharField()
+                    reviews = fields.EmbeddedDocumentField(Review)
+
+            with self.assertRaisesRegex(DeprecationWarning, "deprecated"):
+                class Blog(MongoModel):
+                    name = fields.CharField()
+                    reviews = fields.EmbeddedDocumentListField(Review)

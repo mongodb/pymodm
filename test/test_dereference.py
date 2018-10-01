@@ -24,7 +24,7 @@ class CommentWrapper(EmbeddedMongoModel):
 
 
 class CommentWrapperList(MongoModel):
-    wrapper = fields.EmbeddedDocumentListField(CommentWrapper)
+    wrapper = fields.EmbeddedModelListField(CommentWrapper)
 
 
 class DereferenceTestCase(ODMTestCase):
@@ -98,7 +98,7 @@ class DereferenceTestCase(ODMTestCase):
         class MultiReferenceModel(MongoModel):
             comments = fields.ListField(fields.ReferenceField(Comment))
             posts = fields.ListField(fields.ReferenceField(Post))
-            embeds = fields.EmbeddedDocumentListField(MultiReferenceModelEmbed)
+            embeds = fields.EmbeddedModelListField(MultiReferenceModelEmbed)
 
         post = Post(title='This is a post.').save()
         comments = [
@@ -158,7 +158,7 @@ class DereferenceTestCase(ODMTestCase):
                 final = final_value
 
         class Card(MongoModel):
-            id = fields.EmbeddedDocumentField(CardIdentity, primary_key=True)
+            id = fields.EmbeddedModelField(CardIdentity, primary_key=True)
             flavor = fields.CharField()
 
         class Hand(MongoModel):
@@ -201,7 +201,7 @@ class DereferenceTestCase(ODMTestCase):
 
     def test_list_embedded_reference_dereference(self):
         # Test dereferencing items stored in a
-        # ListField(EmbeddedDocument(ReferenceField(X)))
+        # ListField(EmbeddedModel(ReferenceField(X)))
         class OtherModel(MongoModel):
             name = fields.CharField()
 
@@ -209,7 +209,7 @@ class DereferenceTestCase(ODMTestCase):
             ref = fields.ReferenceField(OtherModel)
 
         class Container(MongoModel):
-            lst = fields.EmbeddedDocumentListField(OtherRefModel)
+            lst = fields.EmbeddedModelListField(OtherRefModel)
 
         m1 = OtherModel('Aaron').save()
         m2 = OtherModel('Bob').save()
@@ -233,7 +233,7 @@ class DereferenceTestCase(ODMTestCase):
 
     def test_embedded_reference_dereference(self):
         # Test dereferencing items stored in a
-        # EmbeddedDocument(ReferenceField(X))
+        # EmbeddedModel(ReferenceField(X))
         class OtherModel(MongoModel):
             name = fields.CharField()
 
@@ -241,7 +241,7 @@ class DereferenceTestCase(ODMTestCase):
             ref = fields.ReferenceField(OtherModel)
 
         class Container(MongoModel):
-            emb = fields.EmbeddedDocumentField(OtherRefModel)
+            emb = fields.EmbeddedModelField(OtherRefModel)
 
         m1 = OtherModel('Aaron').save()
 
