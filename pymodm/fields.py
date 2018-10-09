@@ -14,7 +14,6 @@
 
 """PyMongo ODM Field Definitions."""
 
-import collections
 import datetime
 import decimal
 import ipaddress
@@ -52,7 +51,7 @@ from pymodm.base.fields import (RelatedModelFieldsBase,
                                 GeoJSONField,
                                 RelatedEmbeddedModelFieldsBase)
 from pymodm.common import _import, validate_mongo_keys
-from pymodm.compat import text_type, string_types, PY3
+from pymodm.compat import abc, text_type, string_types, PY3
 from pymodm.connection import _get_db
 from pymodm.errors import ValidationError, ConfigurationError
 from pymodm.base.fields import MongoBaseField
@@ -716,7 +715,7 @@ class DictField(MongoBaseField):
         self.validators.append(validate_keys)
 
     def to_mongo(self, value):
-        if isinstance(value, collections.Mapping):
+        if isinstance(value, abc.Mapping):
             return value
         try:
             return dict(value)
