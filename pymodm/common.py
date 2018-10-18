@@ -14,14 +14,13 @@
 
 import re
 
-from collections import Mapping
 from importlib import import_module
 
 import pymongo
 
 from pymodm.errors import ModelDoesNotExist
 
-from pymodm.compat import string_types
+from pymodm.compat import abc, string_types
 
 
 # Mapping of class names to class objects.
@@ -161,7 +160,7 @@ def validate_list_tuple_or_none(option, value):
 
 
 def validate_mapping(option, value):
-    if not isinstance(value, Mapping):
+    if not isinstance(value, abc.Mapping):
         raise TypeError('%s must be a Mapping, not a %s'
                         % (option, value.__class__.__name__))
     return value
