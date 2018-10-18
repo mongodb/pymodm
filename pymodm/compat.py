@@ -15,6 +15,11 @@
 """Tools for Python 2/3 compatibility."""
 import sys
 
+try:
+    import collections.abc as abc
+except ImportError:
+    # Python < 3.3
+    import collections as abc  # noqa
 
 PY3 = sys.version_info[0] == 3
 
