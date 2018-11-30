@@ -290,6 +290,8 @@ class MongoModelBase(object):
     def to_son(self):
         """Get this Model back as a :class:`~bson.son.SON` object.
 
+        It does not dereference fields.
+
         :returns: SON representing this object as a MongoDB document.
 
         """
