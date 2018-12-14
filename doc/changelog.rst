@@ -1,10 +1,23 @@
 Changelog
 =========
 
+Version 0.5.0.dev0
+------------------
+
+This release fixes a number of bug-fixes and improvements, including:
+
+* Rename EmbeddedDocumentField to EmbeddedModelField and
+  EmbeddedDocumentListField to EmbeddedModelListField.
+* Deprecate EmbeddedDocumentField and EmbeddedDocumentListField.
+
+For full list of the issues resolved in this release, visit
+https://jira.mongodb.org/secure/ReleaseNote.jspa?projectId=13381&version=21201.
+
+
 Version 0.4.1
 -------------
 
-This release includes a number of bug-fixes and improvements:
+This release includes a number of bug-fixes and improvements, including:
 
 * Improve documentation.
 * Improved support defining models before calling
