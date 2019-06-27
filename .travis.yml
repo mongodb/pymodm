@@ -4,7 +4,6 @@ python:
   - 3.4
   - 3.5
   - 3.6
-  - 3.7
 
 env:
   matrix:
@@ -14,7 +13,7 @@ env:
     - MONGODB=3.4.19
     - MONGODB=3.6.13
     - MONGODB=4.0.9
-    - MONGODB=4.2.0-rc2
+    - MONGODB=4.1.13
 
 matrix:
   fast_finish: true
