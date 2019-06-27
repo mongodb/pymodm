@@ -1,7 +1,6 @@
 language: python
 python:
   - 2.7
-  - 3.3
   - 3.4
   - 3.5
   - 3.6
@@ -10,11 +9,10 @@ env:
   matrix:
     - MONGODB=2.6.12
     - MONGODB=3.0.15
-    - MONGODB=3.2.20
-    - MONGODB=3.4.16
-    - MONGODB=3.6.6
-    - MONGODB=4.0.0
-    - MONGODB=4.1.1
+    - MONGODB=3.2.22
+    - MONGODB=3.4.19
+    - MONGODB=3.6.13
+    - MONGODB=4.0.9
 
 matrix:
   fast_finish: true
