@@ -48,6 +48,27 @@ class ConnectionTestCase(ODMTestCase):
         self.assertEqual(42, client.max_pool_size)
         self.assertEqual(10, client.min_pool_size)
 
+    def test_handshake(self):
+        from pymodm.connection import DriverInfo
+        from pymodm import version
+        if DriverInfo is None:
+            self.skipTest("Underlying PyMongo version does not implement the "
+                          "handshake specification.")
+
+        # PyMODM should implicitly pass along DriverInfo.
+        connect('mongodb://localhost:27017/foo', 'foo-connection')
+        client = _get_connection('foo-connection').database.client
+        self.assertEqual(DriverInfo('PyMODM', version),
+                         client._topology_settings.pool_options.driver)
+
+        # PyMODM should not override user-provided DriverInfo.
+        driver_info = DriverInfo('bar', 'baz')
+        connect('mongodb://localhost:27017/foo', 'foo-connection',
+                driver=driver_info)
+        client = _get_connection('foo-connection').database.client
+        self.assertEqual(driver_info,
+                         client._topology_settings.pool_options.driver)
+
     def test_connect_lazily(self):
         heartbeat_listener = HeartbeatStartedListener()
         connect('mongodb://localhost:27017/foo',

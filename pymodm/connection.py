@@ -21,6 +21,12 @@ from pymongo import uri_parser, MongoClient
 
 from pymodm.compat import reraise
 
+try:
+    from pymongo.driver_info import DriverInfo
+except ImportError:
+    DriverInfo = None
+    raise
+
 
 __all__ = ['connect']
 
@@ -63,6 +69,13 @@ def connect(mongodb_uri, alias=DEFAULT_CONNECTION_ALIAS, **kwargs):
     parsed_uri = uri_parser.parse_uri(mongodb_uri)
     if not parsed_uri.get('database'):
         raise ValueError('Connection must specify a database.')
+
+    # Include client metadata if available.
+    if DriverInfo is not None:
+        # Import version locally to avoid circular import.
+        from pymodm import version
+        kwargs.setdefault('driver', DriverInfo('PyMODM', version))
+
     _CONNECTIONS[alias] = ConnectionInfo(
         parsed_uri=parsed_uri,
         conn_string=mongodb_uri,
