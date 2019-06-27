@@ -2,7 +2,7 @@ from collections import defaultdict
 from pymodm import connection
 from pymodm.connection import connect, _get_connection
 from pymodm import MongoModel, CharField
-from pymongo import IndexModel
+from pymongo import IndexModel, MongoClient
 from pymongo.monitoring import CommandListener, ServerHeartbeatListener
 
 from test import ODMTestCase
@@ -47,17 +47,15 @@ class MockMongoClient(object):
         self.kwargs = None
 
     def enable(self):
-        self._original = connection.MongoClient
-
         def _mock_mongoclient(*args, **kwargs):
             self.args = args
             self.kwargs = kwargs
-            return self._original(*args, **kwargs)
+            return MongoClient(*args, **kwargs)
 
         connection.MongoClient = _mock_mongoclient
 
     def disable(self):
-        connection.MongoClient = self._original
+        connection.MongoClient = MongoClient
 
     def __enter__(self):
         self.enable()
@@ -85,13 +83,14 @@ class ConnectionTestCase(ODMTestCase):
 
         # PyMODM should implicitly pass along DriverInfo.
         with MockMongoClient() as mock:
-            connect('mongodb://localhost:27017/foo')
+            connect('mongodb://localhost:27017/foo', 'foo-connection')
         self.assertEqual(DriverInfo('PyMODM', version), mock.kwargs['driver'])
 
         # PyMODM should not override user-provided DriverInfo.
         driver_info = DriverInfo('bar', 'baz')
         with MockMongoClient() as mock:
-            connect('mongodb://localhost:27017/foo', driver=driver_info)
+            connect('mongodb://localhost:27017/foo', 'foo-connection',
+                    driver=driver_info)
         self.assertEqual(driver_info, mock.kwargs['driver'])
 
     def test_connect_lazily(self):
