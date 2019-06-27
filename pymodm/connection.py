@@ -25,7 +25,6 @@ try:
     from pymongo.driver_info import DriverInfo
 except ImportError:
     DriverInfo = None
-    raise
 
 
 __all__ = ['connect']
