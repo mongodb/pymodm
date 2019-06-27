@@ -1,4 +1,5 @@
 from collections import defaultdict
+from pymodm import connection
 from pymodm.connection import connect, _get_connection
 from pymodm import MongoModel, CharField
 from pymongo import IndexModel
@@ -39,6 +40,33 @@ class WhiteListEventListener(CommandListener):
             self.results['failed'].append(event)
 
 
+class MockMongoClient(object):
+    """Intercept and record calls to MongoClient."""
+    def __init__(self):
+        self.args = None
+        self.kwargs = None
+
+    def enable(self):
+        self._original = connection.MongoClient
+
+        def _mock_mongoclient(*args, **kwargs):
+            self.args = args
+            self.kwargs = kwargs
+            return self._original(*args, **kwargs)
+
+        connection.MongoClient = _mock_mongoclient
+
+    def disable(self):
+        connection.MongoClient = self._original
+
+    def __enter__(self):
+        self.enable()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.disable()
+
+
 class ConnectionTestCase(ODMTestCase):
     def test_connect_with_kwargs(self):
         connect('mongodb://localhost:27017/foo?maxPoolSize=42',
@@ -56,18 +84,15 @@ class ConnectionTestCase(ODMTestCase):
                           "handshake specification.")
 
         # PyMODM should implicitly pass along DriverInfo.
-        connect('mongodb://localhost:27017/foo', 'foo-connection')
-        client = _get_connection('foo-connection').database.client
-        self.assertEqual(DriverInfo('PyMODM', version),
-                         client._topology_settings.pool_options.driver)
+        with MockMongoClient() as mock:
+            connect('mongodb://localhost:27017/foo')
+        self.assertEqual(DriverInfo('PyMODM', version), mock.kwargs['driver'])
 
         # PyMODM should not override user-provided DriverInfo.
         driver_info = DriverInfo('bar', 'baz')
-        connect('mongodb://localhost:27017/foo', 'foo-connection',
-                driver=driver_info)
-        client = _get_connection('foo-connection').database.client
-        self.assertEqual(driver_info,
-                         client._topology_settings.pool_options.driver)
+        with MockMongoClient() as mock:
+            connect('mongodb://localhost:27017/foo', driver=driver_info)
+        self.assertEqual(driver_info, mock.kwargs['driver'])
 
     def test_connect_lazily(self):
         heartbeat_listener = HeartbeatStartedListener()
@@ -75,7 +100,6 @@ class ConnectionTestCase(ODMTestCase):
                 'foo-connection',
                 connect=False,
                 event_listeners=[heartbeat_listener])
-        client = _get_connection('foo-connection').database.client
 
         class Article(MongoModel):
             title = CharField()
@@ -96,7 +120,6 @@ class ConnectionTestCase(ODMTestCase):
                 'foo-connection',
                 connect=False,
                 event_listeners=[heartbeat_listener, create_indexes_listener])
-        client = _get_connection('foo-connection').database.client
 
         class Article(MongoModel):
             title = CharField()
@@ -113,4 +136,5 @@ class ConnectionTestCase(ODMTestCase):
         # The connection and indexes are created on the first query.
         self.assertEqual(Article.objects.count(), 0)
         self.assertGreaterEqual(len(heartbeat_listener.results), 1)
-        self.assertGreaterEqual(len(create_indexes_listener.results['started']), 1)
+        self.assertGreaterEqual(
+            len(create_indexes_listener.results['started']), 1)
