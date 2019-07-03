@@ -487,6 +487,12 @@ class QuerySet(object):
 
         return self._collection.delete_many(
             self._query, collation=self._collation).deleted_count
+    
+    def distinct(self, field):
+          return self._collection.distinct(field)
+
+    def drop(self):
+        return self._collection.drop()
 
     def update(self, update, **kwargs):
         """Update the objects in this QuerySet and return the number updated.
