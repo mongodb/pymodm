@@ -814,6 +814,8 @@ class ListField(MongoBaseField):
         field = self._field
         while field is not None:
             field.model = self.model
+            if isinstance(field, ReferenceField):
+                field._register_delete_rule(name)
             field = getattr(field, '_field', None)
 
     def __get__(self, inst, owner):
@@ -1232,13 +1234,16 @@ class ReferenceField(RelatedModelFieldsBase):
         self._on_delete = on_delete
         self.validators.append(validators.validator_for_func(self.to_mongo))
 
-    def contribute_to_class(self, cls, name):
-        super(ReferenceField, self).contribute_to_class(cls, name)
+    def _register_delete_rule(self, name):
         # Install our delete rule on the class.
         if ReferenceField.DO_NOTHING != self._on_delete:
             self.related_model.register_delete_rule(self.model,
                                                     name,
                                                     self._on_delete)
+
+    def contribute_to_class(self, cls, name):
+        super(ReferenceField, self).contribute_to_class(cls, name)
+        self._register_delete_rule(name)
 
     def dereference_if_needed(self, value):
         # Already dereferenced values can be returned immediately.
