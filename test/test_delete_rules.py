@@ -106,18 +106,28 @@ class DeleteRulesTestCase(ODMTestCase):
         with self.assertRaises(OperationError):
             reffed.delete()
 
+    def _pull_test(self, referencing_model):
+        refs = [ReferencedModel().save() for i in range(3)]
+        multi_reffing = referencing_model(refs).save()
+
+        refs[0].delete()
+        multi_reffing.refresh_from_db()
+        self.assertEqual(refs[1:], multi_reffing.refs)
+
     def test_pull(self):
         class MultiReferencingModel(MongoModel):
             refs = fields.ListField(fields.ReferenceField(ReferencedModel))
         ReferencedModel.register_delete_rule(
             MultiReferencingModel, 'refs', fields.ReferenceField.PULL)
 
-        refs = [ReferencedModel().save() for i in range(3)]
-        multi_reffing = MultiReferencingModel(refs).save()
+        self._pull_test(MultiReferencingModel)
 
-        refs[0].delete()
-        multi_reffing.refresh_from_db()
-        self.assertEqual(2, len(multi_reffing.refs))
+    def test_pull_list_field_with_on_delete(self):
+        class MultiReferencingModel(MongoModel):
+            refs = fields.ListField(fields.ReferenceField(
+                ReferencedModel, on_delete=fields.ReferenceField.PULL))
+
+        self._pull_test(MultiReferencingModel)
 
     def test_bidirectional(self):
         A.register_delete_rule(B, 'ref', fields.ReferenceField.DENY)
