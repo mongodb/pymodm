@@ -14,6 +14,7 @@
 
 import copy
 
+from bson.son import SON
 import pymongo
 
 from pymodm import errors
@@ -166,7 +167,7 @@ class QuerySet(object):
         if self._projection:
             before_pipeline.append({'$project': self._projection})
         if self._order_by:
-            before_pipeline.append({'$sort': self._order_by})
+            before_pipeline.append({'$sort': SON(self._order_by)})
         if self._skip:
             before_pipeline.append({'$skip': self._skip})
         if self._limit:
