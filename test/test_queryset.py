@@ -114,6 +114,12 @@ class QuerySetTestCase(ODMTestCase):
         assert_reverses(User.objects.order_by(
             [('_id', 1), ('phone', -1), ('lname', 1)]))
 
+    def test_order_by_with_aggregate(self):
+        results = list(User.objects.order_by([('_id', 1)]).aggregate(
+            {'$limit': 1}
+        ))
+        self.assertEqual('Amarth', results[0]['lname'])
+
     def test_project(self):
         results = User.objects.project({'lname': 1})
         for result in results:
