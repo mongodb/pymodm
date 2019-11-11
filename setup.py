@@ -20,7 +20,7 @@ except ImportError:
     use_setuptools()
     from setuptools import setup, find_packages
 
-VERSION = '0.5.0.dev0'
+VERSION = '0.4.2'
 
 LONG_DESCRIPTION = None
 try:

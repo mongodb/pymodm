@@ -1,6 +1,24 @@
 Changelog
 =========
 
+Version 0.4.2
+-------------
+
+This release includes a number of bug-fixes:
+
+* Fix incompatibility of :meth:`~pymodm.queryset.QuerySet.order_by` and
+  :meth:`~pymodm.queryset.QuerySet.aggregate`.
+* Properly register :class:`~pymodm.fields.ReferenceField`'s delete rule
+  when embedded in a :class:`~pymodm.fields.ListField`
+  (`PYMODM-129 <https://jira.mongodb.org/browse/PYMODM-129>`_).
+* Add client metadata to server connections
+  (`PYMODM-128 <https://jira.mongodb.org/browse/PYMODM-128>`_)
+* Fix Python 3.7 DeprecationWarning for collections.abc.Mapping.
+
+For full list of the issues resolved in this release, visit
+https://jira.mongodb.org/secure/ReleaseNote.jspa?projectId=13381&version=23583.
+
+
 Version 0.4.1
 -------------
 
