@@ -34,7 +34,7 @@ class MultipleInheritanceModel(User, AnotherUser):
 
 class FinalModel(MongoModel):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(FinalModel, self).__init__(*args, **kwargs)
 
     class Meta:
         final = True
