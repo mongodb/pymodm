@@ -42,8 +42,10 @@ class MongoModelMetaclass(type):
         if not model_parents:
             return type.__new__(mcls, name, bases, attrs)
 
-        new_class = type.__new__(
-            mcls, name, bases, {'__module__': attrs['__module__']})
+        new_attrs = {'__module__': attrs['__module__']}
+        if '__classcell__' in attrs:
+            new_attrs['__classcell__'] = attrs['__classcell__']
+        new_class = type.__new__(mcls, name, bases, new_attrs)
 
         # User-defined or inherited metadata
         meta = attrs.get('Meta', getattr(new_class, 'Meta', None))

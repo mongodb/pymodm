@@ -33,6 +33,12 @@ class MultipleInheritanceModel(User, AnotherUser):
 
 
 class FinalModel(MongoModel):
+    def _set_attributes(self, dict):
+        """
+        To test proper functioning of super in Model classes with Python 3.8+ - see https://bugs.python.org/issue23722
+        """
+        return super(FinalModel, self)._set_attributes(dict)
+
     class Meta:
         final = True
 
