@@ -39,8 +39,7 @@ Support / Feedback
 For issues with, questions about, or feedback for PyMODM, please look into
 our `support channels <http://www.mongodb.org/about/support>`_. Please do not
 email any of the PyMODM developers directly with issues or questions -
-you're more likely to get an answer on the `mongodb-user
-<http://groups.google.com/group/mongodb-user>`_ list on Google Groups.
+you're more likely to get an answer on the `MongoDB Community Forums <https://developer.mongodb.com/community/forums/tags/c/drivers-odms-connectors/7/pymodm-odm>`_.
 
 Bugs / Feature Requests
 =======================
