@@ -20,7 +20,7 @@ except ImportError:
     use_setuptools()
     from setuptools import setup, find_packages
 
-VERSION = '0.4.3.dev0'
+VERSION = '0.4.3'
 
 LONG_DESCRIPTION = None
 try:
@@ -41,6 +41,8 @@ CLASSIFIERS = [
     "Programming Language :: Python :: 3.4",
     "Programming Language :: Python :: 3.5",
     "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
     'Topic :: Database',

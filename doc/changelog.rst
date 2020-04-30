@@ -1,6 +1,14 @@
 Changelog
 =========
 
+Version 0.4.3
+-------------
+
+This release includes a bug-fix with Python 3.8 support.
+
+For full list of the issues resolved in this release, visit
+https://jira.mongodb.org/secure/ReleaseNote.jspa?projectId=13381&version=27387
+
 Version 0.4.2
 -------------
 
