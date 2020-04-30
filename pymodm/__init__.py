@@ -20,4 +20,4 @@ from pymodm import base, connection, fields
 
 __all__ = fields.__all__ + connection.__all__ + base.__all__
 
-version = '0.4.3'
+version = '0.4.4.dev0'
