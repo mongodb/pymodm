@@ -42,7 +42,7 @@ class Storage(object):
         """
         raise NotImplementedError
 
-    def save(name, content, metadata=None):
+    def save(self, name, content, metadata=None):
         """Save `content` in a file named `name`.
 
         :parameters:
