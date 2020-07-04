@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from pymongo import IndexModel
+
 from pymodm import MongoModel, fields
 
 
@@ -33,3 +35,12 @@ class UserOtherCollection(ParentModel):
 
 class User(ParentModel):
     address = fields.CharField()
+
+
+class Fruit(MongoModel):
+    name = fields.CharField()
+    color = fields.CharField()
+
+    class Meta:
+        collection_name = 'test_fruit'
+        indexes = [IndexModel([('name', 1), ('color', 1)], unique=True)]

@@ -14,8 +14,8 @@
 
 import copy
 
-from bson.son import SON
 import pymongo
+from bson.son import SON
 
 from pymodm import errors
 from pymodm.common import (
@@ -390,7 +390,7 @@ class QuerySet(object):
         """
         return self._model(**kwargs).save()
 
-    def bulk_create(self, object_or_objects, retrieve=False, full_clean=False):
+    def bulk_create(self, object_or_objects, retrieve=False, full_clean=False, ordered=True):
         """Save Model instances in bulk.
 
         :parameters:
@@ -402,6 +402,11 @@ class QuerySet(object):
           - `full_clean`: Whether to validate each object by calling
             the :meth:`~pymodm.MongoModel.full_clean` method before saving.
             This isn't done by default.
+          - `ordered` (optional): If ``True`` (the default) documents will be
+            inserted on the server serially, in the order provided. If an error
+            occurs all remaining inserts are aborted. If ``False``, documents
+            will be inserted on the server in arbitrary order, possibly in
+            parallel, and all document inserts will be attempted.
 
         :returns: A list of ids for the documents saved, or of the
                   :class:`~pymodm.MongoModel` instances themselves if `retrieve`
@@ -428,7 +433,7 @@ class QuerySet(object):
             for object in object_or_objects:
                 object.full_clean()
         docs = (obj.to_son() for obj in object_or_objects)
-        ids = self._collection.insert_many(docs).inserted_ids
+        ids = self._collection.insert_many(docs, ordered=ordered).inserted_ids
         if retrieve:
             return list(self.raw({'_id': {'$in': ids}}))
         return ids
