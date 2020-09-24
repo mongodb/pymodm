@@ -1285,5 +1285,9 @@ class ReferenceField(RelatedModelFieldsBase):
         value = super(ReferenceField, self).__get__(inst, owner)
         MongoModelBase = _import('pymodm.base.models.MongoModelBase')
         if inst is not None and isinstance(inst, MongoModelBase):
-            return self.to_python(value)
+            pvalue = self.to_python(value)
+            # Store the value back into the instance if dereferenced.
+            if isinstance(pvalue, self.related_model):
+                inst._data.set_python_value(self.attname, pvalue)
+            return pvalue
         return self
