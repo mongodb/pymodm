@@ -2,6 +2,9 @@
 PyMODM
 ======
 
+**MongoDB has paused the development of PyMODM.** If there are any users who want
+to take over and maintain this project, or if you just have questions, please respond
+to `this forum post <https://developer.mongodb.com/community/forums/t/updates-on-pymodm/9363>`_.
 
 .. image:: https://readthedocs.org/projects/pymodm/badge/?version=stable
    :alt: Documentation
@@ -10,10 +13,6 @@ PyMODM
 .. image:: https://travis-ci.org/mongodb/pymodm.svg?branch=master
    :alt: View build status
    :target: https://travis-ci.org/mongodb/pymodm
-
-.. image:: https://badges.gitter.im/mongodb/pymodm.svg
-   :alt: Join the chat at https://gitter.im/mongodb/pymodm
-   :target: https://gitter.im/mongodb/pymodm?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
 A generic ODM around PyMongo_, the MongoDB Python driver. PyMODM works on Python
 2.7 as well as Python 3.3 and up. To learn more, you can browse the `official
