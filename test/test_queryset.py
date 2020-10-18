@@ -13,14 +13,14 @@
 # limitations under the License.
 
 from bson.objectid import ObjectId
+from pymongo.errors import BulkWriteError
 
 from pymodm import fields
 from pymodm.base import MongoModel
 from pymodm.compat import text_type
 from pymodm.context_managers import no_auto_dereference
-
 from test import ODMTestCase
-from test.models import ParentModel, User
+from test.models import ParentModel, User, Fruit
 
 
 class Vacation(MongoModel):
@@ -246,3 +246,20 @@ class QuerySetTestCase(ODMTestCase):
             posts = list(Post.objects.select_related())
             self.assertEqual([], posts[0].comments)
             self.assertEqual(posts[1].comments, comments)
+
+
+class QuerySetBulkCreateTestCase(ODMTestCase):
+    def setUp(self):
+        pass
+
+    def test_bulk_create_duplicate_key(self):
+        with self.assertRaises(BulkWriteError) as context:
+            Fruit.objects.bulk_create([
+                Fruit(name="Apple", color="Green"),
+                Fruit(name="Apple", color="Red"),
+                Fruit(name="Apple", color="Red"),
+                Fruit(name="Orange", color="Green"),
+                Fruit(name="Orange", color="Orange"),
+                Fruit(name="Orange", color="Orange"),
+            ], ordered=False)
+            self.assertTrue('batch op errors occurred' in context.exception)
